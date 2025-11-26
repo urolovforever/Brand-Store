@@ -1,75 +1,167 @@
+/* Premium Minimalist Header */
 .header {
-  background-color: #fff;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  padding: 15px 0;
+  background-color: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  padding: 20px 0;
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 1000;
+  transition: all 0.3s ease;
 }
 
-.header-content {
+.header-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 40px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 20px;
 }
 
-.logo h1 {
+/* Logo - Ultra Minimal */
+.logo {
   font-size: 24px;
-  color: #333;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: #1A1A1A;
+  transition: color 0.3s ease;
 }
 
+.logo:hover {
+  color: #1F4EAD;
+}
+
+/* Navigation - Clean & Spaced */
 .nav {
   display: flex;
-  gap: 30px;
+  gap: 48px;
+  flex: 1;
+  justify-content: center;
 }
 
-.nav a {
-  color: #666;
-  font-weight: 500;
-  transition: color 0.3s;
+.nav-link {
+  font-size: 14px;
+  font-weight: 400;
+  color: #6B6B6B;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  transition: color 0.3s ease;
+  position: relative;
 }
 
-.nav a:hover {
-  color: #000;
+.nav-link:hover {
+  color: #1A1A1A;
 }
 
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: #1F4EAD;
+  transition: width 0.3s ease;
+}
+
+.nav-link:hover::after {
+  width: 100%;
+}
+
+/* Header Actions - Icon Links */
 .header-actions {
   display: flex;
-  gap: 20px;
+  gap: 24px;
   align-items: center;
 }
 
-.icon-btn {
+.icon-link {
   position: relative;
-  font-size: 20px;
+  color: #1A1A1A;
   padding: 8px;
   border-radius: 50%;
-  transition: background 0.3s;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.icon-btn:hover {
-  background: #f5f5f5;
+.icon-link:hover {
+  background: #F5F5F5;
+  transform: scale(1.05);
 }
 
-.badge {
+.icon-link svg {
+  transition: stroke 0.3s ease;
+}
+
+.icon-link:hover svg {
+  stroke: #1F4EAD;
+}
+
+/* Cart Count Badge */
+.cart-icon {
+  position: relative;
+}
+
+.cart-count {
   position: absolute;
-  top: 0;
-  right: 0;
-  background: #ff4444;
-  color: white;
-  font-size: 11px;
-  padding: 2px 6px;
-  border-radius: 10px;
+  top: 2px;
+  right: 2px;
+  background: #1F4EAD;
+  color: #FFFFFF;
+  font-size: 10px;
+  font-weight: 600;
+  min-width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  padding: 0 4px;
 }
 
-@media (max-width: 768px) {
-  .header-content {
-    flex-wrap: wrap;
+/* Responsive */
+@media (max-width: 968px) {
+  .header-container {
+    padding: 0 24px;
   }
 
   .nav {
-    gap: 15px;
-    font-size: 14px;
+    gap: 32px;
+  }
+}
+
+@media (max-width: 768px) {
+  .header-container {
+    padding: 0 20px;
+  }
+
+  .nav {
+    display: none;
+  }
+
+  .header-actions {
+    gap: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .logo {
+    font-size: 20px;
+  }
+
+  .header-actions {
+    gap: 12px;
+  }
+
+  .icon-link {
+    padding: 6px;
+  }
+
+  .icon-link svg {
+    width: 18px;
+    height: 18px;
   }
 }
