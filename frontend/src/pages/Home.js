@@ -19,8 +19,12 @@ function Home() {
         productService.getCategories(),
       ]);
 
-      setNewArrivals(newProducts.slice(0, 4)); // Show first 4
-      setCategories(categoriesData.slice(0, 3)); // Show first 3
+      // Handle paginated response (DRF returns {results: [...], count: N})
+      const productsArray = Array.isArray(newProducts) ? newProducts : newProducts.results || [];
+      const categoriesArray = Array.isArray(categoriesData) ? categoriesData : categoriesData.results || [];
+
+      setNewArrivals(productsArray.slice(0, 4)); // Show first 4
+      setCategories(categoriesArray.slice(0, 3)); // Show first 3
     } catch (error) {
       console.error('Error loading home data:', error);
     } finally {
