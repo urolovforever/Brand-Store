@@ -35,10 +35,11 @@ function Shop() {
         productService.getSizes(),
       ]);
 
-      setProducts(productsData);
-      setCategories(categoriesData);
-      setColors(colorsData);
-      setSizes(sizesData);
+      // Handle paginated response (DRF returns {results: [...], count: N})
+      setProducts(Array.isArray(productsData) ? productsData : productsData.results || []);
+      setCategories(Array.isArray(categoriesData) ? categoriesData : categoriesData.results || []);
+      setColors(Array.isArray(colorsData) ? colorsData : colorsData.results || []);
+      setSizes(Array.isArray(sizesData) ? sizesData : sizesData.results || []);
     } catch (error) {
       console.error('Error loading shop data:', error);
     } finally {
