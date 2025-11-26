@@ -176,11 +176,11 @@ function ProductDetail() {
             <div>
               <h1 className="product-name">{product.name}</h1>
               <div className="product-meta">
-                <span className="product-category">{product.category}</span>
+                <span className="product-category">{product.category?.name || 'Uncategorized'}</span>
                 <span className="separator">•</span>
                 <div className="product-rating">
                   <span className="stars">★★★★★</span>
-                  <span className="rating-text">({product.reviews_count} reviews)</span>
+                  <span className="rating-text">({product.reviews_count || 0} reviews)</span>
                 </div>
               </div>
             </div>
@@ -207,13 +207,14 @@ function ProductDetail() {
           <p className="product-description">{product.description}</p>
 
           {/* Color Selection */}
-          <div className="selection-group">
-            <div className="selection-header">
-              <label className="selection-label">Color</label>
-              <span className="selected-value">{selectedColor}</span>
-            </div>
-            <div className="color-options">
-              {product.colors.map(color => (
+          {product.colors && product.colors.length > 0 && (
+            <div className="selection-group">
+              <div className="selection-header">
+                <label className="selection-label">Color</label>
+                <span className="selected-value">{selectedColor}</span>
+              </div>
+              <div className="color-options">
+                {product.colors.map(color => (
                 <button
                   key={color.id}
                   className={`color-swatch ${selectedColor === color.name ? 'active' : ''}`}
@@ -227,18 +228,20 @@ function ProductDetail() {
                     </svg>
                   )}
                 </button>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Size Selection */}
-          <div className="selection-group">
-            <div className="selection-header">
-              <label className="selection-label">Size</label>
-              <span className="selected-value">{selectedSize}</span>
-            </div>
-            <div className="size-options">
-              {product.sizes.map(size => (
+          {product.sizes && product.sizes.length > 0 && (
+            <div className="selection-group">
+              <div className="selection-header">
+                <label className="selection-label">Size</label>
+                <span className="selected-value">{selectedSize}</span>
+              </div>
+              <div className="size-options">
+                {product.sizes.map(size => (
                 <button
                   key={size.id}
                   className={`size-button ${selectedSize === size.name ? 'active' : ''} ${size.stock === 0 ? 'out-of-stock' : ''}`}
@@ -248,12 +251,13 @@ function ProductDetail() {
                   {size.name}
                   {size.stock === 0 && <span className="stock-line"></span>}
                 </button>
-              ))}
+                ))}
+              </div>
+              {selectedSize && selectedSizeStock < 5 && selectedSizeStock > 0 && (
+                <p className="stock-warning">Only {selectedSizeStock} left in stock</p>
+              )}
             </div>
-            {selectedSize && selectedSizeStock < 5 && selectedSizeStock > 0 && (
-              <p className="stock-warning">Only {selectedSizeStock} left in stock</p>
-            )}
-          </div>
+          )}
 
           {/* Quantity Selector */}
           <div className="selection-group">
@@ -317,34 +321,42 @@ function ProductDetail() {
           )}
 
           {/* Product Details */}
-          <div className="product-details">
-            <h3 className="details-title">Product Details</h3>
-            <ul className="details-list">
-              {product.details.map((detail, index) => (
-                <li key={index}>{detail}</li>
-              ))}
-            </ul>
-          </div>
+          {product.details && product.details.length > 0 && (
+            <div className="product-details">
+              <h3 className="details-title">Product Details</h3>
+              <ul className="details-list">
+                {product.details.map((detail, index) => (
+                  <li key={index}>{detail}</li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Related Products */}
-      <section className="related-products">
-        <h2 className="section-title">You May Also Like</h2>
-        <div className="related-grid">
-          {[1, 2, 3, 4].map(i => (
-            <Link key={i} to={`/product/${i}`} className="related-card">
-              <div className="related-image">
-                <div className="image-placeholder">Product {i}</div>
-              </div>
-              <div className="related-info">
-                <h4 className="related-name">Related Product {i}</h4>
-                <p className="related-price">65,000 UZS</p>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
+      {relatedProducts && relatedProducts.length > 0 && (
+        <section className="related-products">
+          <h2 className="section-title">You May Also Like</h2>
+          <div className="related-grid">
+            {relatedProducts.slice(0, 4).map(relatedProduct => (
+              <Link key={relatedProduct.id} to={`/product/${relatedProduct.slug}`} className="related-card">
+                <div className="related-image">
+                  {relatedProduct.images?.[0]?.image ? (
+                    <img src={relatedProduct.images[0].image} alt={relatedProduct.name} />
+                  ) : (
+                    <div className="image-placeholder">{relatedProduct.name}</div>
+                  )}
+                </div>
+                <div className="related-info">
+                  <h4 className="related-name">{relatedProduct.name}</h4>
+                  <p className="related-price">{relatedProduct.price.toLocaleString()} UZS</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }
