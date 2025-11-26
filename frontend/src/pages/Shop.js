@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
+import { productService } from '../services';
 import './Shop.css';
 
 function Shop() {
@@ -19,26 +20,31 @@ function Shop() {
   const [sortBy, setSortBy] = useState(searchParams.get('sort') || 'newest');
   const [showFilters, setShowFilters] = useState(false);
 
-  // Sample products (will be replaced with API call)
+  // Load initial data from backend
   useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      setProducts([
-        { id: 1, name: 'TIU Classic Hoodie', price: 89000, category: 'Apparel', color: 'Navy', size: 'M', image: null, is_new: true },
-        { id: 2, name: 'University Tee', price: 45000, category: 'Apparel', color: 'White', size: 'L', image: null, on_sale: true },
-        { id: 3, name: 'Campus Cap', price: 35000, category: 'Accessories', color: 'Black', size: 'One Size', image: null },
-        { id: 4, name: 'Logo Tote Bag', price: 55000, category: 'Accessories', color: 'Beige', size: 'One Size', image: null },
-        { id: 5, name: 'Sport Jacket', price: 125000, category: 'Apparel', color: 'Navy', size: 'XL', image: null },
-        { id: 6, name: 'Cotton Polo', price: 65000, category: 'Apparel', color: 'Navy', size: 'M', image: null, is_new: true },
-        { id: 7, name: 'Laptop Sleeve', price: 45000, category: 'Accessories', color: 'Black', size: 'One Size', image: null },
-        { id: 8, name: 'Zip Hoodie', price: 95000, category: 'Apparel', color: 'Grey', size: 'L', image: null },
-      ]);
-      setCategories(['Apparel', 'Accessories', 'Custom']);
-      setColors(['Navy', 'White', 'Black', 'Grey', 'Beige']);
-      setSizes(['XS', 'S', 'M', 'L', 'XL', 'XXL', 'One Size']);
-      setLoading(false);
-    }, 500);
+    loadData();
   }, []);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const [productsData, categoriesData, colorsData, sizesData] = await Promise.all([
+        productService.getProducts(),
+        productService.getCategories(),
+        productService.getColors(),
+        productService.getSizes(),
+      ]);
+
+      setProducts(productsData);
+      setCategories(categoriesData);
+      setColors(colorsData);
+      setSizes(sizesData);
+    } catch (error) {
+      console.error('Error loading shop data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Update URL params when filters change
   useEffect(() => {
@@ -54,11 +60,30 @@ function Shop() {
   // Filter and sort products
   const filteredProducts = products
     .filter(product => {
+      // Search filter
       if (searchQuery && !product.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
-      if (selectedCategory && product.category !== selectedCategory) return false;
-      if (selectedColor && product.color !== selectedColor) return false;
-      if (selectedSize && product.size !== selectedSize) return false;
+
+      // Category filter
+      if (selectedCategory) {
+        const categoryMatch = product.category?.slug === selectedCategory || product.category?.name === selectedCategory;
+        if (!categoryMatch) return false;
+      }
+
+      // Color filter
+      if (selectedColor) {
+        const hasColor = product.colors?.some(c => c.id === parseInt(selectedColor) || c.name === selectedColor);
+        if (!hasColor) return false;
+      }
+
+      // Size filter
+      if (selectedSize) {
+        const hasSize = product.sizes?.some(s => s.id === parseInt(selectedSize) || s.name === selectedSize);
+        if (!hasSize) return false;
+      }
+
+      // Price filter
       if (product.price < priceRange[0] || product.price > priceRange[1]) return false;
+
       return true;
     })
     .sort((a, b) => {
@@ -66,7 +91,7 @@ function Shop() {
         case 'price_low': return a.price - b.price;
         case 'price_high': return b.price - a.price;
         case 'name': return a.name.localeCompare(b.name);
-        default: return b.id - a.id; // newest
+        default: return new Date(b.created_at) - new Date(a.created_at); // newest
       }
     });
 
@@ -153,14 +178,14 @@ function Shop() {
             <h4 className="filter-title">Category</h4>
             <div className="filter-options">
               {categories.map(category => (
-                <label key={category} className="filter-option">
+                <label key={category.id} className="filter-option">
                   <input
                     type="radio"
                     name="category"
-                    checked={selectedCategory === category}
-                    onChange={() => setSelectedCategory(category)}
+                    checked={selectedCategory === category.slug}
+                    onChange={() => setSelectedCategory(category.slug)}
                   />
-                  <span>{category}</span>
+                  <span>{category.name}</span>
                 </label>
               ))}
               {selectedCategory && (
@@ -179,14 +204,14 @@ function Shop() {
             <h4 className="filter-title">Color</h4>
             <div className="filter-options">
               {colors.map(color => (
-                <label key={color} className="filter-option">
+                <label key={color.id} className="filter-option">
                   <input
                     type="radio"
                     name="color"
-                    checked={selectedColor === color}
-                    onChange={() => setSelectedColor(color)}
+                    checked={selectedColor === String(color.id)}
+                    onChange={() => setSelectedColor(String(color.id))}
                   />
-                  <span>{color}</span>
+                  <span>{color.name}</span>
                 </label>
               ))}
               {selectedColor && (
@@ -206,11 +231,11 @@ function Shop() {
             <div className="filter-options size-options">
               {sizes.map(size => (
                 <button
-                  key={size}
-                  className={`size-button ${selectedSize === size ? 'active' : ''}`}
-                  onClick={() => setSelectedSize(selectedSize === size ? '' : size)}
+                  key={size.id}
+                  className={`size-button ${selectedSize === String(size.id) ? 'active' : ''}`}
+                  onClick={() => setSelectedSize(selectedSize === String(size.id) ? '' : String(size.id))}
                 >
-                  {size}
+                  {size.name}
                 </button>
               ))}
             </div>
@@ -266,27 +291,48 @@ function Shop() {
 
 // Product Card Component
 function ProductCard({ product, index }) {
+  const primaryImage = product.images?.[0]?.image || product.images?.[0];
+  const hasDiscount = product.discount_percentage > 0;
+  const finalPrice = hasDiscount ? product.price * (1 - product.discount_percentage / 100) : product.price;
+
   return (
     <Link
-      to={`/product/${product.id}`}
+      to={`/product/${product.slug}`}
       className="product-card"
       style={{ animationDelay: `${index * 0.05}s` }}
     >
       <div className="product-image">
-        <div className="image-placeholder">
-          {product.name}
-        </div>
+        {primaryImage ? (
+          <img src={primaryImage} alt={product.name} />
+        ) : (
+          <div className="image-placeholder">
+            {product.name}
+          </div>
+        )}
         {product.is_new && <span className="badge new-badge">New</span>}
-        {product.on_sale && <span className="badge sale-badge">Sale</span>}
+        {hasDiscount && <span className="badge sale-badge">-{product.discount_percentage}%</span>}
       </div>
       <div className="product-info">
         <h3 className="product-name">{product.name}</h3>
         <div className="product-meta">
-          <span className="product-category">{product.category}</span>
-          <span className="product-separator">•</span>
-          <span className="product-color">{product.color}</span>
+          <span className="product-category">{product.category?.name}</span>
+          {product.colors && product.colors.length > 0 && (
+            <>
+              <span className="product-separator">•</span>
+              <span className="product-color">{product.colors[0].name}</span>
+            </>
+          )}
         </div>
-        <p className="product-price">{product.price.toLocaleString()} UZS</p>
+        <div className="product-price">
+          {hasDiscount ? (
+            <>
+              <span className="price-original">{product.price.toLocaleString()} UZS</span>
+              <span className="price-discounted">{Math.round(finalPrice).toLocaleString()} UZS</span>
+            </>
+          ) : (
+            <span>{product.price.toLocaleString()} UZS</span>
+          )}
+        </div>
       </div>
     </Link>
   );

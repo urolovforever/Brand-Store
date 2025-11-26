@@ -34,7 +34,7 @@ const productService = {
   // Get new arrivals
   getNewArrivals: async () => {
     try {
-      const response = await api.get('/products/', { params: { is_new: true } });
+      const response = await api.get('/products/new_arrivals/');
       return response.data;
     } catch (error) {
       throw error.response?.data || error.message;
@@ -44,7 +44,17 @@ const productService = {
   // Get products on sale
   getSaleProducts: async () => {
     try {
-      const response = await api.get('/products/', { params: { on_sale: true } });
+      const response = await api.get('/products/on_sale/');
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+
+  // Get related products
+  getRelatedProducts: async (slug) => {
+    try {
+      const response = await api.get(`/products/${slug}/related/`);
       return response.data;
     } catch (error) {
       throw error.response?.data || error.message;

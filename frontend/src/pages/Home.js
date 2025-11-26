@@ -1,8 +1,33 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { productService } from '../services';
 import './Home.css';
 
 function Home() {
+  const [newArrivals, setNewArrivals] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      const [newProducts, categoriesData] = await Promise.all([
+        productService.getNewArrivals(),
+        productService.getCategories(),
+      ]);
+
+      setNewArrivals(newProducts.slice(0, 4)); // Show first 4
+      setCategories(categoriesData.slice(0, 3)); // Show first 3
+    } catch (error) {
+      console.error('Error loading home data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="home">
       {/* Hero Section */}
@@ -20,47 +45,33 @@ function Home() {
           <h2 className="section-title">New Arrivals</h2>
           <Link to="/shop?is_new=true" className="view-all">View All →</Link>
         </div>
-        <div className="product-grid">
-          <ProductCard
-            title="TIU Hoodie"
-            price="89,000 UZS"
-            image="/placeholder-hoodie.jpg"
-          />
-          <ProductCard
-            title="Classic Tee"
-            price="45,000 UZS"
-            image="/placeholder-tee.jpg"
-          />
-          <ProductCard
-            title="Campus Cap"
-            price="35,000 UZS"
-            image="/placeholder-cap.jpg"
-          />
-          <ProductCard
-            title="Logo Tote"
-            price="55,000 UZS"
-            image="/placeholder-tote.jpg"
-          />
-        </div>
+        {loading ? (
+          <div className="loading-grid">
+            <p>Loading products...</p>
+          </div>
+        ) : (
+          <div className="product-grid">
+            {newArrivals.length > 0 ? (
+              newArrivals.map(product => (
+                <ProductCard key={product.id} product={product} />
+              ))
+            ) : (
+              <p>No new arrivals yet</p>
+            )}
+          </div>
+        )}
       </section>
 
       {/* Category Showcase */}
       <section className="category-showcase">
-        <CategoryCard
-          title="Apparel"
-          description="Premium hoodies, tees, and outerwear"
-          link="/shop?category=apparel"
-        />
-        <CategoryCard
-          title="Accessories"
-          description="Caps, bags, and essentials"
-          link="/shop?category=accessories"
-        />
-        <CategoryCard
-          title="Custom"
-          description="Personalized merchandise"
-          link="/shop?category=custom"
-        />
+        {categories.map(category => (
+          <CategoryCard
+            key={category.id}
+            title={category.name}
+            description={category.description || `Explore our ${category.name} collection`}
+            link={`/shop?category=${category.slug}`}
+          />
+        ))}
       </section>
 
       {/* Values Section */}
@@ -86,17 +97,36 @@ function Home() {
 }
 
 // Product Card Component
-function ProductCard({ title, price, image }) {
+function ProductCard({ product }) {
+  const primaryImage = product.images?.[0]?.image || product.images?.[0];
+  const hasDiscount = product.discount_percentage > 0;
+  const finalPrice = hasDiscount ? product.price * (1 - product.discount_percentage / 100) : product.price;
+
   return (
-    <div className="product-card">
+    <Link to={`/product/${product.slug}`} className="product-card">
       <div className="product-image">
-        <div className="image-placeholder">{title}</div>
+        {primaryImage ? (
+          <img src={primaryImage} alt={product.name} />
+        ) : (
+          <div className="image-placeholder">{product.name}</div>
+        )}
+        {product.is_new && <span className="badge-new">New</span>}
+        {hasDiscount && <span className="badge-sale">-{product.discount_percentage}%</span>}
       </div>
       <div className="product-info">
-        <h3 className="product-title">{title}</h3>
-        <p className="product-price">{price}</p>
+        <h3 className="product-title">{product.name}</h3>
+        <p className="product-price">
+          {hasDiscount ? (
+            <>
+              <span className="price-original">{product.price.toLocaleString()} UZS</span>
+              <span className="price-discounted">{Math.round(finalPrice).toLocaleString()} UZS</span>
+            </>
+          ) : (
+            `${product.price.toLocaleString()} UZS`
+          )}
+        </p>
       </div>
-    </div>
+    </Link>
   );
 }
 
