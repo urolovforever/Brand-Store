@@ -1,0 +1,75 @@
+# ========================================
+# Python / Django
+# ========================================
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+env/
+
+# Django stuff
+db.sqlite3
+media/
+staticfiles/
+*.log
+
+# Django secret key (if stored separately)
+secret_key.txt
+
+# PyCharm project settings
+.idea/
+*.iml
+
+# VSCode
+.vscode/
+
+# ========================================
+# Node / React
+# ========================================
+
+# Dependency directories
+frontend/node_modules/
+frontend/build/
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Dist files
+dist/
+
+# ========================================
+# Environment files
+# ========================================
+.env
+.env.*
+*.env
+
+# ========================================
+# OS files
+# ========================================
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+
+# Linux
+*~
+
+# ========================================
+# Misc
+# ========================================
+*.swp
+*.swo

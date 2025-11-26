@@ -1,0 +1,37 @@
+# ================================
+# Core Framework
+# ================================
+Django==4.2.11
+djangorestframework==3.14.0
+django-cors-headers==4.3.1
+django-filter==23.5
+Pillow==10.3.0
+
+# ================================
+# Authentication & Users
+# ================================
+djangorestframework-simplejwt==5.3.1
+djoser==2.2.2
+
+# ================================
+# Database (choose one)
+# ================================
+psycopg2-binary==2.9.9     # PostgreSQL (recommended)
+# mysqlclient==2.2.4        # MySQL alternative
+
+# ================================
+# Payments (Click / Payme)
+# ================================
+requests==2.31.0
+
+# ================================
+# Config & Documentation
+# ================================
+python-decouple==3.8
+drf-spectacular==0.27.1
+
+# ================================
+# OPTIONAL (helpful tools)
+# ================================
+gunicorn==21.2.0          # For deployment (Linux servers)
+whitenoise==6.6.0         # Static file handling (if needed)
