@@ -49,6 +49,7 @@ class CartItemSerializer(serializers.ModelSerializer):
 class CartSerializer(serializers.ModelSerializer):
     """Serializer for shopping cart"""
     items = CartItemSerializer(many=True, read_only=True)
+    promo_code = serializers.SerializerMethodField()
     total_items = serializers.IntegerField(read_only=True)
     subtotal = serializers.DecimalField(
         max_digits=10,
@@ -58,8 +59,18 @@ class CartSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Cart
-        fields = ('id', 'items', 'total_items', 'subtotal', 'created_at', 'updated_at')
+        fields = ('id', 'items', 'promo_code', 'total_items', 'subtotal', 'created_at', 'updated_at')
         read_only_fields = ('id', 'created_at', 'updated_at')
+
+    def get_promo_code(self, obj):
+        """Get promo code details if applied"""
+        if obj.promo_code:
+            return {
+                'code': obj.promo_code.code,
+                'discount': obj.promo_code.discount_percentage or 0,
+                'description': obj.promo_code.description,
+            }
+        return None
 
 
 # ============================================
