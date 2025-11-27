@@ -53,12 +53,35 @@ class CartViewSet(viewsets.ViewSet):
             )
 
         # Check if item already exists in cart
-        cart_item = CartItem.objects.filter(
-            cart=cart,
-            product=product,
-            color_id=color_id,
-            size_id=size_id
-        ).first()
+        # Handle None values for color_id and size_id properly
+        if color_id is None and size_id is None:
+            cart_item = CartItem.objects.filter(
+                cart=cart,
+                product=product,
+                color__isnull=True,
+                size__isnull=True
+            ).first()
+        elif color_id is None:
+            cart_item = CartItem.objects.filter(
+                cart=cart,
+                product=product,
+                color__isnull=True,
+                size_id=size_id
+            ).first()
+        elif size_id is None:
+            cart_item = CartItem.objects.filter(
+                cart=cart,
+                product=product,
+                color_id=color_id,
+                size__isnull=True
+            ).first()
+        else:
+            cart_item = CartItem.objects.filter(
+                cart=cart,
+                product=product,
+                color_id=color_id,
+                size_id=size_id
+            ).first()
 
         if cart_item:
             # Update quantity
