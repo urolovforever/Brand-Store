@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { productService } from '../services';
+import { useWishlist } from '../context/WishlistContext';
 import './Shop.css';
 
 function Shop() {
@@ -10,7 +11,7 @@ function Shop() {
   const [colors, setColors] = useState([]);
   const [sizes, setSizes] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [wishlist, setWishlist] = useState([]);
+  const { toggleWishlist, isInWishlist } = useWishlist();
 
   // Filter states
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
@@ -133,14 +134,10 @@ function Shop() {
     }));
   };
 
-  const toggleWishlist = (e, productId) => {
+  const handleToggleWishlist = (e, productId) => {
     e.preventDefault();
     e.stopPropagation();
-    setWishlist(prev =>
-      prev.includes(productId)
-        ? prev.filter(id => id !== productId)
-        : [...prev, productId]
-    );
+    toggleWishlist(productId);
   };
 
   const activeFilterCount = [searchQuery, selectedCategory, selectedColor, selectedSize, isNew, onSale].filter(Boolean).length;
@@ -364,8 +361,8 @@ function Shop() {
                   key={product.id}
                   product={product}
                   index={index}
-                  isWishlisted={wishlist.includes(product.id)}
-                  onToggleWishlist={toggleWishlist}
+                  isWishlisted={isInWishlist(product.id)}
+                  onToggleWishlist={handleToggleWishlist}
                 />
               ))}
             </div>

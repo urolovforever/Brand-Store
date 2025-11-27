@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
+import { useWishlist } from '../context/WishlistContext';
 import './Header.css';
 
 function Header() {
   const navigate = useNavigate();
   const { language, setLanguage, t } = useLanguage();
+  const { wishlistCount, toggleDrawer } = useWishlist();
   const [showLangMenu, setShowLangMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
@@ -72,11 +74,16 @@ function Header() {
             )}
           </div>
 
-          <Link to="/wishlist" className="icon-link" title={t('wishlist')}>
+          <button
+            className="icon-link wishlist-icon"
+            title={t('wishlist')}
+            onClick={toggleDrawer}
+          >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
             </svg>
-          </Link>
+            {wishlistCount > 0 && <span className="wishlist-count">{wishlistCount}</span>}
+          </button>
           <Link to="/login" className="icon-link" title={t('account')}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>

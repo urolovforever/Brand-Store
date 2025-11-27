@@ -253,6 +253,38 @@
   padding: 0 4px;
 }
 
+/* Wishlist Count Badge */
+.wishlist-icon {
+  position: relative;
+}
+
+.wishlist-count {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: #E63946;
+  color: #FFFFFF;
+  font-size: 10px;
+  font-weight: 600;
+  min-width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  padding: 0 4px;
+  animation: scaleIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
 /* Animations */
 @keyframes slideDown {
   from {
