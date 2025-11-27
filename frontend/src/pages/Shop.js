@@ -10,6 +10,7 @@ function Shop() {
   const [colors, setColors] = useState([]);
   const [sizes, setSizes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [wishlist, setWishlist] = useState([]);
 
   // Filter states
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
@@ -21,6 +22,14 @@ function Shop() {
   const [priceRange, setPriceRange] = useState([0, 1000000]);
   const [sortBy, setSortBy] = useState(searchParams.get('sort') || 'newest');
   const [showFilters, setShowFilters] = useState(false);
+
+  // Expandable filter groups
+  const [expandedGroups, setExpandedGroups] = useState({
+    category: true,
+    color: true,
+    size: true,
+    price: true
+  });
 
   // Load initial data from backend
   useEffect(() => {
@@ -117,184 +126,220 @@ function Shop() {
     setSortBy('newest');
   };
 
+  const toggleGroup = (group) => {
+    setExpandedGroups(prev => ({
+      ...prev,
+      [group]: !prev[group]
+    }));
+  };
+
+  const toggleWishlist = (e, productId) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setWishlist(prev =>
+      prev.includes(productId)
+        ? prev.filter(id => id !== productId)
+        : [...prev, productId]
+    );
+  };
+
   const activeFilterCount = [searchQuery, selectedCategory, selectedColor, selectedSize, isNew, onSale].filter(Boolean).length;
 
   return (
     <div className="shop">
       {/* Page Header */}
       <div className="shop-header">
-        <div className="shop-header-content">
-          <h1 className="shop-title">Shop</h1>
-          <p className="shop-subtitle">{filteredProducts.length} products</p>
-        </div>
-
-        {/* Search and Sort Bar */}
-        <div className="shop-controls">
-          <div className="search-bar">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <circle cx="11" cy="11" r="8"/>
-              <path d="m21 21-4.35-4.35"/>
-            </svg>
-            <input
-              type="text"
-              placeholder="Search products..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-
-          <button
-            className="filter-toggle"
-            onClick={() => setShowFilters(!showFilters)}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <line x1="4" y1="21" x2="4" y2="14"/>
-              <line x1="4" y1="10" x2="4" y2="3"/>
-              <line x1="12" y1="21" x2="12" y2="12"/>
-              <line x1="12" y1="8" x2="12" y2="3"/>
-              <line x1="20" y1="21" x2="20" y2="16"/>
-              <line x1="20" y1="12" x2="20" y2="3"/>
-              <line x1="1" y1="14" x2="7" y2="14"/>
-              <line x1="9" y1="8" x2="15" y2="8"/>
-              <line x1="17" y1="16" x2="23" y2="16"/>
-            </svg>
-            Filters {activeFilterCount > 0 && `(${activeFilterCount})`}
-          </button>
-
-          <select
-            className="sort-select"
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-          >
-            <option value="newest">Newest</option>
-            <option value="price_low">Price: Low to High</option>
-            <option value="price_high">Price: High to Low</option>
-            <option value="name">Name: A to Z</option>
-          </select>
-        </div>
+        <h1 className="shop-title">All Products</h1>
+        <p className="shop-subtitle">{filteredProducts.length} items</p>
       </div>
 
       <div className="shop-content">
         {/* Filters Sidebar */}
         <aside className={`filters-sidebar ${showFilters ? 'active' : ''}`}>
-          <div className="filters-header">
-            <h3>Filters</h3>
-            {activeFilterCount > 0 && (
-              <button className="clear-filters" onClick={clearFilters}>
-                Clear All
-              </button>
-            )}
-          </div>
-
-          {/* Special Filters */}
+          {/* Special Filters with Toggle Switches */}
           <div className="filter-group">
-            <h4 className="filter-title">Special</h4>
-            <div className="filter-options">
-              <label className="filter-option checkbox-option">
-                <input
-                  type="checkbox"
-                  checked={isNew}
-                  onChange={(e) => setIsNew(e.target.checked)}
-                />
-                <span>New Arrivals</span>
-              </label>
-              <label className="filter-option checkbox-option">
+            <div className="filter-toggle-item">
+              <span className="filter-toggle-label">Sale items only</span>
+              <label className="toggle-switch">
                 <input
                   type="checkbox"
                   checked={onSale}
                   onChange={(e) => setOnSale(e.target.checked)}
                 />
-                <span>On Sale</span>
+                <span className="toggle-slider"></span>
+              </label>
+            </div>
+            <div className="filter-toggle-item">
+              <span className="filter-toggle-label">New arrivals</span>
+              <label className="toggle-switch">
+                <input
+                  type="checkbox"
+                  checked={isNew}
+                  onChange={(e) => setIsNew(e.target.checked)}
+                />
+                <span className="toggle-slider"></span>
               </label>
             </div>
           </div>
 
-          {/* Category Filter */}
-          <div className="filter-group">
-            <h4 className="filter-title">Category</h4>
-            <div className="filter-options">
-              {categories.map(category => (
-                <label key={category.id} className="filter-option">
-                  <input
-                    type="radio"
-                    name="category"
-                    checked={selectedCategory === category.slug}
-                    onChange={() => setSelectedCategory(category.slug)}
-                  />
-                  <span>{category.name}</span>
-                </label>
-              ))}
-              {selectedCategory && (
+          {/* Category Filter - Expandable */}
+          <div className="filter-group expandable">
+            <button
+              className="filter-group-header"
+              onClick={() => toggleGroup('category')}
+            >
+              <span className="filter-group-title">Category</span>
+              <svg
+                className={`expand-icon ${expandedGroups.category ? 'expanded' : ''}`}
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+            {expandedGroups.category && (
+              <div className="filter-options">
                 <button
-                  className="clear-filter"
+                  className={`filter-option-btn ${!selectedCategory ? 'active' : ''}`}
                   onClick={() => setSelectedCategory('')}
                 >
-                  Clear
+                  All Categories
                 </button>
-              )}
-            </div>
+                {categories.map(category => (
+                  <button
+                    key={category.id}
+                    className={`filter-option-btn ${selectedCategory === category.slug ? 'active' : ''}`}
+                    onClick={() => setSelectedCategory(category.slug)}
+                  >
+                    {category.name}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Color Filter */}
-          <div className="filter-group">
-            <h4 className="filter-title">Color</h4>
-            <div className="filter-options">
-              {colors.map(color => (
-                <label key={color.id} className="filter-option">
-                  <input
-                    type="radio"
-                    name="color"
-                    checked={selectedColor === String(color.id)}
-                    onChange={() => setSelectedColor(String(color.id))}
-                  />
-                  <span>{color.name}</span>
-                </label>
-              ))}
-              {selectedColor && (
+          {/* Color Filter - Expandable */}
+          <div className="filter-group expandable">
+            <button
+              className="filter-group-header"
+              onClick={() => toggleGroup('color')}
+            >
+              <span className="filter-group-title">Color</span>
+              <svg
+                className={`expand-icon ${expandedGroups.color ? 'expanded' : ''}`}
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+            {expandedGroups.color && (
+              <div className="filter-options">
                 <button
-                  className="clear-filter"
+                  className={`filter-option-btn ${!selectedColor ? 'active' : ''}`}
                   onClick={() => setSelectedColor('')}
                 >
-                  Clear
+                  All Colors
                 </button>
-              )}
-            </div>
-          </div>
-
-          {/* Size Filter */}
-          <div className="filter-group">
-            <h4 className="filter-title">Size</h4>
-            <div className="filter-options size-options">
-              {sizes.map(size => (
-                <button
-                  key={size.id}
-                  className={`size-button ${selectedSize === String(size.id) ? 'active' : ''}`}
-                  onClick={() => setSelectedSize(selectedSize === String(size.id) ? '' : String(size.id))}
-                >
-                  {size.name}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Price Range Filter */}
-          <div className="filter-group">
-            <h4 className="filter-title">Price Range</h4>
-            <div className="price-range">
-              <input
-                type="range"
-                min="0"
-                max="1000000"
-                step="10000"
-                value={priceRange[1]}
-                onChange={(e) => setPriceRange([0, parseInt(e.target.value)])}
-              />
-              <div className="price-labels">
-                <span>0 UZS</span>
-                <span>{priceRange[1].toLocaleString()} UZS</span>
+                {colors.map(color => (
+                  <button
+                    key={color.id}
+                    className={`filter-option-btn ${selectedColor === String(color.id) ? 'active' : ''}`}
+                    onClick={() => setSelectedColor(String(color.id))}
+                  >
+                    {color.name}
+                  </button>
+                ))}
               </div>
-            </div>
+            )}
           </div>
+
+          {/* Size Filter - Expandable */}
+          <div className="filter-group expandable">
+            <button
+              className="filter-group-header"
+              onClick={() => toggleGroup('size')}
+            >
+              <span className="filter-group-title">Size</span>
+              <svg
+                className={`expand-icon ${expandedGroups.size ? 'expanded' : ''}`}
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+            {expandedGroups.size && (
+              <div className="filter-options size-grid">
+                {sizes.map(size => (
+                  <button
+                    key={size.id}
+                    className={`size-chip ${selectedSize === String(size.id) ? 'active' : ''}`}
+                    onClick={() => setSelectedSize(selectedSize === String(size.id) ? '' : String(size.id))}
+                  >
+                    {size.name}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Price Range Filter - Expandable */}
+          <div className="filter-group expandable">
+            <button
+              className="filter-group-header"
+              onClick={() => toggleGroup('price')}
+            >
+              <span className="filter-group-title">Price</span>
+              <svg
+                className={`expand-icon ${expandedGroups.price ? 'expanded' : ''}`}
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+            {expandedGroups.price && (
+              <div className="filter-options">
+                <div className="price-range-slider">
+                  <input
+                    type="range"
+                    min="0"
+                    max="1000000"
+                    step="10000"
+                    value={priceRange[1]}
+                    onChange={(e) => setPriceRange([0, parseInt(e.target.value)])}
+                  />
+                  <div className="price-range-label">
+                    Up to {priceRange[1].toLocaleString()} UZS
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Clear Filters */}
+          {activeFilterCount > 0 && (
+            <button className="clear-all-btn" onClick={clearFilters}>
+              Clear all filters
+            </button>
+          )}
         </aside>
 
         {/* Products Grid */}
@@ -315,7 +360,13 @@ function Shop() {
           ) : (
             <div className="products-grid">
               {filteredProducts.map((product, index) => (
-                <ProductCard key={product.id} product={product} index={index} />
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  index={index}
+                  isWishlisted={wishlist.includes(product.id)}
+                  onToggleWishlist={toggleWishlist}
+                />
               ))}
             </div>
           )}
@@ -326,7 +377,7 @@ function Shop() {
 }
 
 // Product Card Component
-function ProductCard({ product, index }) {
+function ProductCard({ product, index, isWishlisted, onToggleWishlist }) {
   const primaryImage = product.images?.[0]?.image || product.images?.[0];
   const hasDiscount = product.discount_percentage > 0;
   const finalPrice = hasDiscount ? product.price * (1 - product.discount_percentage / 100) : product.price;
@@ -337,36 +388,50 @@ function ProductCard({ product, index }) {
       className="product-card"
       style={{ animationDelay: `${index * 0.05}s` }}
     >
-      <div className="product-image">
+      <div className="product-image-wrapper">
         {primaryImage ? (
-          <img src={primaryImage} alt={product.name} />
+          <img src={primaryImage} alt={product.name} className="product-image" />
         ) : (
-          <div className="image-placeholder">
-            {product.name}
+          <div className="product-image-placeholder">
+            <span>{product.name}</span>
           </div>
         )}
-        {product.is_new && <span className="badge new-badge">New</span>}
-        {hasDiscount && <span className="badge sale-badge">-{product.discount_percentage}%</span>}
+
+        {/* Wishlist Heart Icon */}
+        <button
+          className={`wishlist-btn ${isWishlisted ? 'active' : ''}`}
+          onClick={(e) => onToggleWishlist(e, product.id)}
+          aria-label="Add to wishlist"
+        >
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill={isWishlisted ? 'currentColor' : 'none'}
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+          </svg>
+        </button>
+
+        {/* Badges */}
+        {product.is_new && <span className="product-badge new">NEW</span>}
+        {hasDiscount && <span className="product-badge sale">-{product.discount_percentage}%</span>}
       </div>
+
       <div className="product-info">
         <h3 className="product-name">{product.name}</h3>
-        <div className="product-meta">
-          <span className="product-category">{product.category?.name}</span>
-          {product.colors && product.colors.length > 0 && (
-            <>
-              <span className="product-separator">•</span>
-              <span className="product-color">{product.colors[0].name}</span>
-            </>
-          )}
-        </div>
         <div className="product-price">
           {hasDiscount ? (
             <>
+              <span className="price-current">{Math.round(finalPrice).toLocaleString()} UZS</span>
               <span className="price-original">{product.price.toLocaleString()} UZS</span>
-              <span className="price-discounted">{Math.round(finalPrice).toLocaleString()} UZS</span>
             </>
           ) : (
-            <span>{product.price.toLocaleString()} UZS</span>
+            <span className="price-current">{product.price.toLocaleString()} UZS</span>
           )}
         </div>
       </div>
