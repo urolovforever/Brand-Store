@@ -21,6 +21,7 @@ class SizeSerializer(serializers.ModelSerializer):
 class CategorySerializer(serializers.ModelSerializer):
     """Serializer for Category model with nested children"""
     children = serializers.SerializerMethodField()
+    image = serializers.SerializerMethodField()
 
     class Meta:
         model = Category
@@ -39,22 +40,41 @@ class CategorySerializer(serializers.ModelSerializer):
     def get_children(self, obj):
         """Get child categories"""
         if obj.children.exists():
-            return CategorySerializer(obj.children.filter(is_active=True), many=True).data
+            return CategorySerializer(obj.children.filter(is_active=True), many=True, context=self.context).data
         return []
+
+    def get_image(self, obj):
+        """Get absolute URL for category image"""
+        if obj.image:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.image.url)
+            return obj.image.url
+        return None
 
 
 class ProductImageSerializer(serializers.ModelSerializer):
     """Serializer for ProductImage model"""
+    image = serializers.SerializerMethodField()
 
     class Meta:
         model = ProductImage
         fields = ('id', 'image', 'alt_text', 'is_primary', 'order')
 
+    def get_image(self, obj):
+        """Get absolute URL for image"""
+        if obj.image:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.image.url)
+            return obj.image.url
+        return None
+
 
 class ReviewSerializer(serializers.ModelSerializer):
     """Serializer for Review model"""
     user_name = serializers.CharField(source='user.username', read_only=True)
-    user_avatar = serializers.ImageField(source='user.avatar', read_only=True)
+    user_avatar = serializers.SerializerMethodField()
 
     class Meta:
         model = Review
@@ -71,6 +91,15 @@ class ReviewSerializer(serializers.ModelSerializer):
             'updated_at'
         )
         read_only_fields = ('id', 'user', 'created_at', 'updated_at', 'is_approved')
+
+    def get_user_avatar(self, obj):
+        """Get absolute URL for user avatar"""
+        if obj.user and obj.user.avatar:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.user.avatar.url)
+            return obj.user.avatar.url
+        return None
 
 
 class ProductListSerializer(serializers.ModelSerializer):
