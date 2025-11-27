@@ -1,17 +1,31 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { orderService } from '../services';
+import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import './Checkout.css';
 
 function Checkout() {
   const navigate = useNavigate();
+  const { isAuthenticated, user, loading: authLoading } = useAuth();
+  const {
+    cartItems,
+    loading: cartLoading,
+    appliedPromo,
+    subtotal,
+    discount,
+    shipping,
+    total,
+    clearCart,
+  } = useCart();
+
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
 
   const [shippingData, setShippingData] = useState({
-    full_name: '',
-    phone: '',
-    email: '',
+    full_name: user?.first_name && user?.last_name ? `${user.first_name} ${user.last_name}` : '',
+    phone: user?.phone || '',
+    email: user?.email || '',
     address: '',
     city: '',
     postal_code: '',
@@ -21,15 +35,31 @@ function Checkout() {
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [errors, setErrors] = useState({});
 
-  // Sample cart data (would come from Context)
-  const cartItems = [
-    { id: 1, name: 'TIU Classic Hoodie', price: 89000, quantity: 2 },
-    { id: 2, name: 'University Tee', price: 45000, quantity: 1 },
-  ];
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      navigate('/login');
+    }
+  }, [isAuthenticated, authLoading, navigate]);
 
-  const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const shipping = subtotal > 200000 ? 0 : 15000;
-  const total = subtotal + shipping;
+  // Redirect to cart if cart is empty
+  useEffect(() => {
+    if (!cartLoading && cartItems.length === 0) {
+      navigate('/cart');
+    }
+  }, [cartItems, cartLoading, navigate]);
+
+  // Pre-fill user data when available
+  useEffect(() => {
+    if (user) {
+      setShippingData(prev => ({
+        ...prev,
+        full_name: user.first_name && user.last_name ? `${user.first_name} ${user.last_name}` : prev.full_name,
+        phone: user.phone || prev.phone,
+        email: user.email || prev.email,
+      }));
+    }
+  }, [user]);
 
   const handleShippingChange = (e) => {
     const { name, value } = e.target;
@@ -84,18 +114,34 @@ function Checkout() {
     setErrors({});
 
     try {
+      // Prepare order data with cart item IDs
       const orderData = {
         ...shippingData,
         payment_method: paymentMethod,
-        items: cartItems,
+        // Send cart item IDs and quantities (backend will fetch product details)
+        items: cartItems.map(item => ({
+          cart_item_id: item.id,
+          product_id: item.product.id,
+          quantity: item.quantity,
+          color_id: item.color?.id || null,
+          size_id: item.size?.id || null,
+        })),
+        promo_code: appliedPromo?.code || null,
       };
 
       const order = await orderService.createOrder(orderData);
 
+      // Clear cart after successful order
+      await clearCart();
+
       // Redirect based on payment method
       if (paymentMethod === 'click' || paymentMethod === 'payme') {
         // Redirect to payment gateway
-        window.location.href = order.payment_url;
+        if (order.payment_url) {
+          window.location.href = order.payment_url;
+        } else {
+          navigate(`/order-success/${order.id}`);
+        }
       } else {
         // Cash on delivery - redirect to success page
         navigate(`/order-success/${order.id}`);
@@ -103,12 +149,22 @@ function Checkout() {
     } catch (error) {
       console.error('Order error:', error);
       setErrors({
-        general: error.detail || 'Failed to create order. Please try again.'
+        general: error.detail || error.message || 'Failed to create order. Please try again.'
       });
     } finally {
       setLoading(false);
     }
   };
+
+  // Show loading while checking auth or cart
+  if (authLoading || cartLoading) {
+    return (
+      <div className="checkout-loading">
+        <div className="spinner-large"></div>
+        <p>Loading checkout...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="checkout">
@@ -340,10 +396,10 @@ function Checkout() {
               {cartItems.map(item => (
                 <div key={item.id} className="summary-item">
                   <div className="item-info">
-                    <span className="item-name">{item.name}</span>
+                    <span className="item-name">{item.product.name}</span>
                     <span className="item-qty">× {item.quantity}</span>
                   </div>
-                  <span className="item-price">{(item.price * item.quantity).toLocaleString()} UZS</span>
+                  <span className="item-price">{(item.product.price * item.quantity).toLocaleString()} UZS</span>
                 </div>
               ))}
             </div>
@@ -353,6 +409,14 @@ function Checkout() {
                 <span>Subtotal</span>
                 <span>{subtotal.toLocaleString()} UZS</span>
               </div>
+
+              {discount > 0 && (
+                <div className="summary-row discount-row">
+                  <span>Discount ({appliedPromo.discount}%)</span>
+                  <span className="discount">-{discount.toLocaleString()} UZS</span>
+                </div>
+              )}
+
               <div className="summary-row">
                 <span>Shipping</span>
                 <span>{shipping === 0 ? <span className="free">Free</span> : `${shipping.toLocaleString()} UZS`}</span>
