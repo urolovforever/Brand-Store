@@ -15,7 +15,7 @@ function Header() {
     { code: 'ru', name: 'Русский', flag: '🇷🇺' },
   ];
 
-  const currentLang = languages.find(lang => lang.code === language);
+  const currentLang = languages.find(lang => lang.code === language) || languages[0];
 
   const handleSearch = (e) => {
     e.preventDefault();
