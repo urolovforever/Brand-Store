@@ -77,7 +77,7 @@ function Home() {
               <div className="hero-content">
                 <h1 className="hero-title">{t('newArrivals')}</h1>
                 <p className="hero-subtitle">{t('premiumQualityDesc')}</p>
-                <Link to="/shop?is_new=true" className="cta-button">{t('viewAll')}</Link>
+                <Link to="/new" className="cta-button">{t('viewAll')}</Link>
               </div>
             </div>
           </SwiperSlide>
@@ -86,7 +86,7 @@ function Home() {
               <div className="hero-content">
                 <h1 className="hero-title">{t('sale')}</h1>
                 <p className="hero-subtitle">{t('easyReturnsDesc')}</p>
-                <Link to="/shop?on_sale=true" className="cta-button">{t('viewAll')}</Link>
+                <Link to="/sale" className="cta-button">{t('viewAll')}</Link>
               </div>
             </div>
           </SwiperSlide>
@@ -141,7 +141,7 @@ function Home() {
       <section className="featured-section">
         <div className="section-header">
           <h2 className="section-title">{t('newArrivals')}</h2>
-          <Link to="/shop?is_new=true" className="view-all">{t('viewAll')} →</Link>
+          <Link to="/new" className="view-all">{t('viewAll')} →</Link>
         </div>
         {loading ? (
           <div className="loading-grid">
@@ -165,7 +165,7 @@ function Home() {
         <section className="featured-section on-sale-section">
           <div className="section-header">
             <h2 className="section-title">{t('sale')}</h2>
-            <Link to="/shop?on_sale=true" className="view-all">{t('viewAll')} →</Link>
+            <Link to="/sale" className="view-all">{t('viewAll')} →</Link>
           </div>
           <div className="product-grid">
             {onSaleProducts.map(product => (
