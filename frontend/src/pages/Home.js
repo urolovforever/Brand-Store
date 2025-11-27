@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { productService } from '../services';
+import { useLanguage } from '../context/LanguageContext';
 import './Home.css';
 
 function Home() {
+  const { t } = useLanguage();
   const [newArrivals, setNewArrivals] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -37,21 +39,21 @@ function Home() {
       {/* Hero Section */}
       <section className="hero">
         <div className="hero-content">
-          <h1 className="hero-title">TIU Brand Store</h1>
-          <p className="hero-subtitle">Premium university merchandise, designed for excellence</p>
-          <Link to="/shop" className="cta-button">Explore Collection</Link>
+          <h1 className="hero-title">{t('heroTitle')}</h1>
+          <p className="hero-subtitle">{t('heroSubtitle')}</p>
+          <Link to="/shop" className="cta-button">{t('exploreCollection')}</Link>
         </div>
       </section>
 
       {/* Featured Category */}
       <section className="featured-section">
         <div className="section-header">
-          <h2 className="section-title">New Arrivals</h2>
-          <Link to="/shop?is_new=true" className="view-all">View All →</Link>
+          <h2 className="section-title">{t('newArrivals')}</h2>
+          <Link to="/shop?is_new=true" className="view-all">{t('viewAll')} →</Link>
         </div>
         {loading ? (
           <div className="loading-grid">
-            <p>Loading products...</p>
+            <p>{t('loadingProducts')}</p>
           </div>
         ) : (
           <div className="product-grid">
@@ -60,7 +62,7 @@ function Home() {
                 <ProductCard key={product.id} product={product} />
               ))
             ) : (
-              <p>No new arrivals yet</p>
+              <p>{t('noNewArrivals')}</p>
             )}
           </div>
         )}
@@ -82,18 +84,18 @@ function Home() {
       <section className="values-section">
         <div className="value-item">
           <div className="value-icon">✓</div>
-          <h3>Premium Quality</h3>
-          <p>Carefully crafted from the finest materials</p>
+          <h3>{t('premiumQuality')}</h3>
+          <p>{t('premiumQualityDesc')}</p>
         </div>
         <div className="value-item">
           <div className="value-icon">✓</div>
-          <h3>Fast Delivery</h3>
-          <p>Quick and reliable shipping across Uzbekistan</p>
+          <h3>{t('fastDelivery')}</h3>
+          <p>{t('fastDeliveryDesc')}</p>
         </div>
         <div className="value-item">
           <div className="value-icon">✓</div>
-          <h3>Easy Returns</h3>
-          <p>30-day hassle-free return policy</p>
+          <h3>{t('easyReturns')}</h3>
+          <p>{t('easyReturnsDesc')}</p>
         </div>
       </section>
     </div>

@@ -1,17 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useLanguage } from '../context/LanguageContext';
 import './Header.css';
 
 function Header() {
   const navigate = useNavigate();
-  const [language, setLanguage] = useState(localStorage.getItem('language') || 'uz');
+  const { language, setLanguage, t } = useLanguage();
   const [showLangMenu, setShowLangMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
-
-  useEffect(() => {
-    localStorage.setItem('language', language);
-  }, [language]);
 
   const languages = [
     { code: 'uz', name: 'O\'zbekcha', flag: '🇺🇿' },
@@ -37,9 +34,9 @@ function Header() {
         </Link>
 
         <nav className="nav">
-          <Link to="/shop" className="nav-link">Shop</Link>
-          <Link to="/shop?is_new=true" className="nav-link">New</Link>
-          <Link to="/shop?on_sale=true" className="nav-link">Sale</Link>
+          <Link to="/shop" className="nav-link">{t('shop')}</Link>
+          <Link to="/shop?is_new=true" className="nav-link">{t('new')}</Link>
+          <Link to="/shop?on_sale=true" className="nav-link">{t('sale')}</Link>
         </nav>
 
         <div className="header-actions">
@@ -47,7 +44,7 @@ function Header() {
           <div className="search-wrapper">
             <button
               className="icon-link"
-              title="Search"
+              title={t('search')}
               onClick={() => setShowSearch(!showSearch)}
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -60,7 +57,7 @@ function Header() {
                 <input
                   type="text"
                   className="search-input"
-                  placeholder="Search products..."
+                  placeholder={t('searchPlaceholder')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   autoFocus
@@ -75,18 +72,18 @@ function Header() {
             )}
           </div>
 
-          <Link to="/wishlist" className="icon-link" title="Wishlist">
+          <Link to="/wishlist" className="icon-link" title={t('wishlist')}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
             </svg>
           </Link>
-          <Link to="/login" className="icon-link" title="Account">
+          <Link to="/login" className="icon-link" title={t('account')}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
               <circle cx="12" cy="7" r="4"/>
             </svg>
           </Link>
-          <Link to="/cart" className="icon-link cart-icon" title="Cart">
+          <Link to="/cart" className="icon-link cart-icon" title={t('cart')}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <circle cx="9" cy="21" r="1"/>
               <circle cx="20" cy="21" r="1"/>
