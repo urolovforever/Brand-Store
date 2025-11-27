@@ -2,12 +2,16 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { useWishlist } from '../context/WishlistContext';
+import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import './Header.css';
 
 function Header() {
   const navigate = useNavigate();
   const { language, setLanguage, t } = useLanguage();
   const { wishlistCount, toggleDrawer } = useWishlist();
+  const { itemCount } = useCart();
+  const { isAuthenticated, user } = useAuth();
   const [showLangMenu, setShowLangMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
@@ -84,7 +88,7 @@ function Header() {
             </svg>
             {wishlistCount > 0 && <span className="wishlist-count">{wishlistCount}</span>}
           </button>
-          <Link to="/login" className="icon-link" title={t('account')}>
+          <Link to={isAuthenticated ? "/profile" : "/login"} className="icon-link" title={t('account')}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
               <circle cx="12" cy="7" r="4"/>
@@ -96,7 +100,7 @@ function Header() {
               <circle cx="20" cy="21" r="1"/>
               <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
             </svg>
-            <span className="cart-count">0</span>
+            {itemCount > 0 && <span className="cart-count">{itemCount}</span>}
           </Link>
 
           {/* Language Selector - Last Item */}

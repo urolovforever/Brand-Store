@@ -1,76 +1,80 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import './Cart.css';
 
 function Cart() {
-  const [cartItems, setCartItems] = useState([
-    {
-      id: 1,
-      product: {
-        id: 1,
-        name: 'TIU Classic Hoodie',
-        price: 89000,
-        image: null,
-        slug: 'tiu-classic-hoodie',
-      },
-      color: 'Navy',
-      size: 'M',
-      quantity: 2,
-    },
-    {
-      id: 2,
-      product: {
-        id: 2,
-        name: 'University Tee',
-        price: 45000,
-        image: null,
-        slug: 'university-tee',
-      },
-      color: 'White',
-      size: 'L',
-      quantity: 1,
-    },
-  ]);
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+  const {
+    cartItems,
+    loading,
+    appliedPromo,
+    subtotal,
+    discount,
+    shipping,
+    total,
+    updateQuantity,
+    removeFromCart,
+    applyPromoCode,
+    removePromoCode,
+  } = useCart();
 
   const [promoCode, setPromoCode] = useState('');
-  const [appliedPromo, setAppliedPromo] = useState(null);
   const [promoError, setPromoError] = useState('');
 
-  const handleQuantityChange = (itemId, newQuantity) => {
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!isAuthenticated && !loading) {
+      navigate('/login');
+    }
+  }, [isAuthenticated, loading, navigate]);
+
+  const handleQuantityChange = async (itemId, newQuantity) => {
     if (newQuantity < 1) return;
-    setCartItems(cartItems.map(item =>
-      item.id === itemId ? { ...item, quantity: newQuantity } : item
-    ));
-  };
-
-  const handleRemoveItem = (itemId) => {
-    setCartItems(cartItems.filter(item => item.id !== itemId));
-  };
-
-  const handleApplyPromo = () => {
-    // Simulate promo code validation
-    if (promoCode === 'TIU10') {
-      setAppliedPromo({ code: 'TIU10', discount: 10 });
-      setPromoError('');
-    } else if (promoCode === '') {
-      setPromoError('Please enter a promo code');
-    } else {
-      setPromoError('Invalid promo code');
-      setAppliedPromo(null);
+    const result = await updateQuantity(itemId, newQuantity);
+    if (!result.success) {
+      alert(result.message);
     }
   };
 
-  const handleRemovePromo = () => {
-    setAppliedPromo(null);
+  const handleRemoveItem = async (itemId) => {
+    const result = await removeFromCart(itemId);
+    if (!result.success) {
+      alert(result.message);
+    }
+  };
+
+  const handleApplyPromo = async () => {
+    if (!promoCode.trim()) {
+      setPromoError('Please enter a promo code');
+      return;
+    }
+
+    const result = await applyPromoCode(promoCode);
+    if (result.success) {
+      setPromoError('');
+      setPromoCode('');
+    } else {
+      setPromoError(result.message);
+    }
+  };
+
+  const handleRemovePromo = async () => {
+    await removePromoCode();
     setPromoCode('');
     setPromoError('');
   };
 
-  // Calculate totals
-  const subtotal = cartItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
-  const discount = appliedPromo ? (subtotal * appliedPromo.discount / 100) : 0;
-  const shipping = subtotal > 0 ? (subtotal > 200000 ? 0 : 15000) : 0;
-  const total = subtotal - discount + shipping;
+  if (loading) {
+    return (
+      <div className="cart-loading">
+        <div className="spinner-large"></div>
+        <p>Loading cart...</p>
+      </div>
+    );
+  }
 
   if (cartItems.length === 0) {
     return (
@@ -204,23 +208,31 @@ function Cart() {
 
 // Cart Item Component
 function CartItem({ item, onQuantityChange, onRemove }) {
+  const primaryImage = item.product?.images?.[0]?.image || item.product?.images?.[0];
+
   return (
     <div className="cart-item">
       <Link to={`/product/${item.product.slug}`} className="item-image">
-        <div className="image-placeholder">
-          {item.product.name}
-        </div>
+        {primaryImage ? (
+          <img src={primaryImage} alt={item.product.name} />
+        ) : (
+          <div className="image-placeholder">
+            {item.product.name}
+          </div>
+        )}
       </Link>
 
       <div className="item-details">
         <Link to={`/product/${item.product.slug}`} className="item-name">
           {item.product.name}
         </Link>
-        <div className="item-options">
-          <span className="item-option">Color: {item.color}</span>
-          <span className="option-separator">•</span>
-          <span className="item-option">Size: {item.size}</span>
-        </div>
+        {(item.color || item.size) && (
+          <div className="item-options">
+            {item.color && <span className="item-option">Color: {item.color.name}</span>}
+            {item.color && item.size && <span className="option-separator">•</span>}
+            {item.size && <span className="item-option">Size: {item.size.name}</span>}
+          </div>
+        )}
         <p className="item-price">{item.product.price.toLocaleString()} UZS</p>
       </div>
 

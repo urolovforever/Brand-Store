@@ -3,6 +3,8 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './App.css';
 import { LanguageProvider } from './context/LanguageContext';
 import { WishlistProvider, useWishlist } from './context/WishlistContext';
+import { AuthProvider } from './context/AuthContext';
+import { CartProvider, useCart } from './context/CartContext';
 
 // Components
 import Header from './components/Header';
@@ -26,31 +28,35 @@ import OrderHistory from './pages/OrderHistory';
 function App() {
   return (
     <LanguageProvider>
-      <WishlistProvider>
-        <Router>
-          <div className="App">
-            <Header />
-            <WishlistDrawerContainer />
-            <main className="main-content">
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/shop" element={<Shop />} />
-                <Route path="/new" element={<NewArrivals />} />
-                <Route path="/sale" element={<OnSale />} />
-                <Route path="/product/:slug" element={<ProductDetail />} />
-                <Route path="/cart" element={<Cart />} />
-                <Route path="/wishlist" element={<Wishlist />} />
-                <Route path="/checkout" element={<Checkout />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/orders" element={<OrderHistory />} />
-              </Routes>
-            </main>
-            <Footer />
-          </div>
-        </Router>
-      </WishlistProvider>
+      <AuthProvider>
+        <CartProvider>
+          <WishlistProvider>
+            <Router>
+              <div className="App">
+                <Header />
+                <WishlistDrawerContainer />
+                <main className="main-content">
+                  <Routes>
+                    <Route path="/" element={<Home />} />
+                    <Route path="/shop" element={<Shop />} />
+                    <Route path="/new" element={<NewArrivals />} />
+                    <Route path="/sale" element={<OnSale />} />
+                    <Route path="/product/:slug" element={<ProductDetail />} />
+                    <Route path="/cart" element={<Cart />} />
+                    <Route path="/wishlist" element={<Wishlist />} />
+                    <Route path="/checkout" element={<Checkout />} />
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/register" element={<Register />} />
+                    <Route path="/profile" element={<Profile />} />
+                    <Route path="/orders" element={<OrderHistory />} />
+                  </Routes>
+                </main>
+                <Footer />
+              </div>
+            </Router>
+          </WishlistProvider>
+        </CartProvider>
+      </AuthProvider>
     </LanguageProvider>
   );
 }
@@ -58,17 +64,21 @@ function App() {
 // Container for WishlistDrawer to use wishlist context
 function WishlistDrawerContainer() {
   const { wishlistItems, isDrawerOpen, closeDrawer, removeFromWishlist } = useWishlist();
+  const { addToCart } = useCart();
 
-  const handleAddToCart = (item) => {
-    // TODO: Implement add to cart functionality
-    console.log('Add to cart:', item);
-    // For now, just close the drawer
+  const handleAddToCart = async (item) => {
+    const result = await addToCart(item.id, 1);
+    if (result.success) {
+      console.log('Added to cart:', item.name);
+    } else {
+      alert(result.message);
+    }
   };
 
-  const handleMoveAllToCart = () => {
-    // TODO: Implement move all to cart functionality
-    console.log('Move all to cart');
-    // For now, just close the drawer
+  const handleMoveAllToCart = async () => {
+    for (const item of wishlistItems) {
+      await addToCart(item.id, 1);
+    }
     closeDrawer();
   };
 
