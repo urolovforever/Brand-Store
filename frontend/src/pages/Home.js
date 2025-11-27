@@ -130,6 +130,7 @@ function Home() {
                   title={category.name}
                   description={category.description || `Explore our ${category.name} collection`}
                   link={`/shop?category=${category.slug}`}
+                  image={category.image}
                 />
               </SwiperSlide>
             ))}
@@ -232,9 +233,14 @@ function ProductCard({ product }) {
 }
 
 // Category Card Component
-function CategoryCard({ title, description, link }) {
+function CategoryCard({ title, description, link, image }) {
   return (
     <Link to={link} className="category-card">
+      {image && (
+        <div className="category-image">
+          <img src={image} alt={title} />
+        </div>
+      )}
       <div className="category-content">
         <h3 className="category-title">{title}</h3>
         <p className="category-description">{description}</p>
