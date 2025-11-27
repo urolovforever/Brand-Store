@@ -105,6 +105,10 @@ class ReviewSerializer(serializers.ModelSerializer):
 class ProductListSerializer(serializers.ModelSerializer):
     """Lightweight serializer for product listings"""
     category_name = serializers.CharField(source='category.name', read_only=True)
+    category = CategorySerializer(read_only=True)
+    colors = ColorSerializer(many=True, read_only=True)
+    sizes = SizeSerializer(many=True, read_only=True)
+    images = ProductImageSerializer(many=True, read_only=True)
     primary_image = serializers.SerializerMethodField()
     discounted_price = serializers.DecimalField(
         max_digits=10,
@@ -119,6 +123,7 @@ class ProductListSerializer(serializers.ModelSerializer):
             'name',
             'slug',
             'short_description',
+            'category',
             'category_name',
             'price',
             'discount_percentage',
@@ -128,6 +133,9 @@ class ProductListSerializer(serializers.ModelSerializer):
             'is_featured',
             'is_in_stock',
             'primary_image',
+            'colors',
+            'sizes',
+            'images',
             'created_at'
         )
 
