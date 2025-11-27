@@ -6,10 +6,10 @@ import './Cart.css';
 
 function Cart() {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loading: authLoading } = useAuth();
   const {
     cartItems,
-    loading,
+    loading: cartLoading,
     appliedPromo,
     subtotal,
     discount,
@@ -24,12 +24,12 @@ function Cart() {
   const [promoCode, setPromoCode] = useState('');
   const [promoError, setPromoError] = useState('');
 
-  // Redirect to login if not authenticated
+  // Redirect to login if not authenticated (wait for auth to finish loading)
   useEffect(() => {
-    if (!isAuthenticated && !loading) {
+    if (!authLoading && !isAuthenticated) {
       navigate('/login');
     }
-  }, [isAuthenticated, loading, navigate]);
+  }, [isAuthenticated, authLoading, navigate]);
 
   const handleQuantityChange = async (itemId, newQuantity) => {
     if (newQuantity < 1) return;
@@ -67,7 +67,8 @@ function Cart() {
     setPromoError('');
   };
 
-  if (loading) {
+  // Show loading only when cart is loading (not during auth check)
+  if (authLoading || cartLoading) {
     return (
       <div className="cart-loading">
         <div className="spinner-large"></div>
