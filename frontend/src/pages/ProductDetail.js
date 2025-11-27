@@ -62,12 +62,7 @@ function ProductDetail() {
       const colorId = product.colors?.find(c => c.name === selectedColor)?.id;
       const sizeId = product.sizes?.find(s => s.name === selectedSize)?.id;
 
-      await cartService.addToCart({
-        product: product.id,
-        quantity,
-        color: colorId,
-        size: sizeId,
-      });
+      await cartService.addToCart(product.id, quantity, colorId, sizeId);
 
       setAddedToCart(true);
       setTimeout(() => setAddedToCart(false), 2000);
@@ -115,8 +110,22 @@ function ProductDetail() {
 
   const hasDiscount = product.discount_percentage > 0;
   const finalPrice = hasDiscount ? product.price * (1 - product.discount_percentage / 100) : product.price;
-  const selectedSizeStock = product?.sizes?.find(s => s.name === selectedSize)?.stock || 0;
-  const canAddToCart = selectedColor && selectedSize && quantity <= selectedSizeStock && selectedSizeStock > 0;
+
+  // Check stock based on whether product has sizes
+  const hasColors = product.colors && product.colors.length > 0;
+  const hasSizes = product.sizes && product.sizes.length > 0;
+  const selectedSizeStock = hasSizes ? (product.sizes.find(s => s.name === selectedSize)?.stock || 0) : product.stock;
+
+  // Can add to cart if:
+  // - Color is selected (if product has colors)
+  // - Size is selected (if product has sizes)
+  // - Quantity is valid
+  const canAddToCart =
+    (!hasColors || selectedColor) &&
+    (!hasSizes || selectedSize) &&
+    quantity > 0 &&
+    quantity <= selectedSizeStock &&
+    selectedSizeStock > 0;
 
   return (
     <div className="product-detail">
@@ -318,10 +327,10 @@ function ProductDetail() {
 
           {!canAddToCart && (
             <p className="error-message">
-              {!selectedColor && `${t('selectColor')}`}
-              {!selectedSize && !selectedColor && ' & '}
-              {!selectedSize && `${t('selectSize')}`}
-              {selectedColor && selectedSize && quantity > selectedSizeStock && t('outOfStock')}
+              {hasColors && !selectedColor && `${t('selectColor')}`}
+              {hasColors && !selectedColor && hasSizes && !selectedSize && ' & '}
+              {hasSizes && !selectedSize && `${t('selectSize')}`}
+              {((hasColors && selectedColor) || !hasColors) && ((hasSizes && selectedSize) || !hasSizes) && quantity > selectedSizeStock && t('outOfStock')}
             </p>
           )}
 
