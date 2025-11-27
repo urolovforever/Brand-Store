@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { authService } from '../services';
+import { useAuth } from '../context/AuthContext';
 import './Login.css';
 
 function Login() {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [formData, setFormData] = useState({
     username: '',
     password: '',
@@ -55,18 +56,18 @@ function Login() {
     setLoading(true);
     setErrors({});
 
-    try {
-      await authService.login(formData.username, formData.password);
+    const result = await login(formData.username, formData.password);
+
+    if (result.success) {
       // Redirect to home or previous page
       navigate('/');
-    } catch (error) {
-      console.error('Login error:', error);
+    } else {
       setErrors({
-        general: error.detail || 'Invalid username or password'
+        general: result.message
       });
-    } finally {
-      setLoading(false);
     }
+
+    setLoading(false);
   };
 
   return (
