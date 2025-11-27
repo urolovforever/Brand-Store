@@ -9,26 +9,19 @@ function Shop() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [colors, setColors] = useState([]);
-  const [sizes, setSizes] = useState([]);
   const [loading, setLoading] = useState(true);
   const { toggleWishlist, isInWishlist } = useWishlist();
 
   // Filter states
-  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || '');
   const [selectedColor, setSelectedColor] = useState(searchParams.get('color') || '');
-  const [selectedSize, setSelectedSize] = useState(searchParams.get('size') || '');
-  const [isNew, setIsNew] = useState(searchParams.get('is_new') === 'true');
-  const [onSale, setOnSale] = useState(searchParams.get('on_sale') === 'true');
   const [priceRange, setPriceRange] = useState([0, 1000000]);
   const [sortBy, setSortBy] = useState(searchParams.get('sort') || 'newest');
-  const [showFilters, setShowFilters] = useState(false);
 
   // Expandable filter groups
   const [expandedGroups, setExpandedGroups] = useState({
     category: true,
     color: true,
-    size: true,
     price: true
   });
 
@@ -40,18 +33,16 @@ function Shop() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [productsData, categoriesData, colorsData, sizesData] = await Promise.all([
+      const [productsData, categoriesData, colorsData] = await Promise.all([
         productService.getProducts(),
         productService.getCategories(),
         productService.getColors(),
-        productService.getSizes(),
       ]);
 
       // Handle paginated response (DRF returns {results: [...], count: N})
       setProducts(Array.isArray(productsData) ? productsData : productsData.results || []);
       setCategories(Array.isArray(categoriesData) ? categoriesData : categoriesData.results || []);
       setColors(Array.isArray(colorsData) ? colorsData : colorsData.results || []);
-      setSizes(Array.isArray(sizesData) ? sizesData : sizesData.results || []);
     } catch (error) {
       console.error('Error loading shop data:', error);
     } finally {
@@ -62,22 +53,15 @@ function Shop() {
   // Update URL params when filters change
   useEffect(() => {
     const params = {};
-    if (searchQuery) params.search = searchQuery;
     if (selectedCategory) params.category = selectedCategory;
     if (selectedColor) params.color = selectedColor;
-    if (selectedSize) params.size = selectedSize;
-    if (isNew) params.is_new = 'true';
-    if (onSale) params.on_sale = 'true';
     if (sortBy !== 'newest') params.sort = sortBy;
     setSearchParams(params);
-  }, [searchQuery, selectedCategory, selectedColor, selectedSize, isNew, onSale, sortBy, setSearchParams]);
+  }, [selectedCategory, selectedColor, sortBy, setSearchParams]);
 
   // Filter and sort products
   const filteredProducts = products
     .filter(product => {
-      // Search filter
-      if (searchQuery && !product.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
-
       // Category filter
       if (selectedCategory) {
         const categoryMatch = product.category?.slug === selectedCategory || product.category?.name === selectedCategory;
@@ -89,18 +73,6 @@ function Shop() {
         const hasColor = product.colors?.some(c => c.id === parseInt(selectedColor) || c.name === selectedColor);
         if (!hasColor) return false;
       }
-
-      // Size filter
-      if (selectedSize) {
-        const hasSize = product.sizes?.some(s => s.id === parseInt(selectedSize) || s.name === selectedSize);
-        if (!hasSize) return false;
-      }
-
-      // New arrivals filter
-      if (isNew && !product.is_new) return false;
-
-      // On sale filter
-      if (onSale && (!product.discount_percentage || product.discount_percentage <= 0)) return false;
 
       // Price filter
       if (product.price < priceRange[0] || product.price > priceRange[1]) return false;
@@ -117,12 +89,8 @@ function Shop() {
     });
 
   const clearFilters = () => {
-    setSearchQuery('');
     setSelectedCategory('');
     setSelectedColor('');
-    setSelectedSize('');
-    setIsNew(false);
-    setOnSale(false);
     setPriceRange([0, 1000000]);
     setSortBy('newest');
   };
@@ -140,45 +108,33 @@ function Shop() {
     toggleWishlist(productId);
   };
 
-  const activeFilterCount = [searchQuery, selectedCategory, selectedColor, selectedSize, isNew, onSale].filter(Boolean).length;
+  const activeFilterCount = [selectedCategory, selectedColor].filter(Boolean).length;
 
   return (
     <div className="shop">
       {/* Page Header */}
       <div className="shop-header">
-        <h1 className="shop-title">All Products</h1>
-        <p className="shop-subtitle">{filteredProducts.length} items</p>
+        <div className="shop-header-left">
+          <h1 className="shop-title">All Products</h1>
+          <p className="shop-subtitle">{filteredProducts.length} items</p>
+        </div>
+        <div className="shop-header-right">
+          <select
+            className="sort-select"
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+          >
+            <option value="newest">Newest</option>
+            <option value="price_low">Price: Low to High</option>
+            <option value="price_high">Price: High to Low</option>
+            <option value="name">Name: A to Z</option>
+          </select>
+        </div>
       </div>
 
       <div className="shop-content">
         {/* Filters Sidebar */}
-        <aside className={`filters-sidebar ${showFilters ? 'active' : ''}`}>
-          {/* Special Filters with Toggle Switches */}
-          <div className="filter-group">
-            <div className="filter-toggle-item">
-              <span className="filter-toggle-label">Sale items only</span>
-              <label className="toggle-switch">
-                <input
-                  type="checkbox"
-                  checked={onSale}
-                  onChange={(e) => setOnSale(e.target.checked)}
-                />
-                <span className="toggle-slider"></span>
-              </label>
-            </div>
-            <div className="filter-toggle-item">
-              <span className="filter-toggle-label">New arrivals</span>
-              <label className="toggle-switch">
-                <input
-                  type="checkbox"
-                  checked={isNew}
-                  onChange={(e) => setIsNew(e.target.checked)}
-                />
-                <span className="toggle-slider"></span>
-              </label>
-            </div>
-          </div>
-
+        <aside className="filters-sidebar">
           {/* Category Filter - Expandable */}
           <div className="filter-group expandable">
             <button
@@ -253,40 +209,6 @@ function Shop() {
                     onClick={() => setSelectedColor(String(color.id))}
                   >
                     {color.name}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Size Filter - Expandable */}
-          <div className="filter-group expandable">
-            <button
-              className="filter-group-header"
-              onClick={() => toggleGroup('size')}
-            >
-              <span className="filter-group-title">Size</span>
-              <svg
-                className={`expand-icon ${expandedGroups.size ? 'expanded' : ''}`}
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <polyline points="6 9 12 15 18 9"></polyline>
-              </svg>
-            </button>
-            {expandedGroups.size && (
-              <div className="filter-options size-grid">
-                {sizes.map(size => (
-                  <button
-                    key={size.id}
-                    className={`size-chip ${selectedSize === String(size.id) ? 'active' : ''}`}
-                    onClick={() => setSelectedSize(selectedSize === String(size.id) ? '' : String(size.id))}
-                  >
-                    {size.name}
                   </button>
                 ))}
               </div>

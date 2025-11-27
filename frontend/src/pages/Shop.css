@@ -28,6 +28,20 @@
   max-width: 1600px;
   margin: 0 auto;
   border-bottom: 1px solid #EFEFEF;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 40px;
+}
+
+.shop-header-left {
+  flex: 1;
+}
+
+.shop-header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
 
 .shop-title {
@@ -43,6 +57,34 @@
   font-weight: 400;
   color: #666666;
   letter-spacing: 0;
+}
+
+.sort-select {
+  padding: 12px 40px 12px 16px;
+  font-size: 14px;
+  font-weight: 400;
+  color: #111111;
+  background: #FFFFFF;
+  border: 1px solid #DADCE0;
+  border-radius: 4px;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s ease;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23111111' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  min-width: 200px;
+}
+
+.sort-select:hover {
+  border-color: #111111;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.08);
+}
+
+.sort-select:focus {
+  border-color: #1F4EAD;
+  box-shadow: 0 0 0 3px rgba(31, 78, 173, 0.1);
 }
 
 /* ============================================
@@ -687,6 +729,17 @@
 @media (max-width: 968px) {
   .shop-header {
     padding: 90px 32px 32px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 24px;
+  }
+
+  .shop-header-right {
+    width: 100%;
+  }
+
+  .sort-select {
+    width: 100%;
   }
 
   .shop-title {
@@ -727,6 +780,12 @@
 @media (max-width: 640px) {
   .shop-header {
     padding: 80px 24px 24px;
+  }
+
+  .sort-select {
+    font-size: 13px;
+    padding: 10px 36px 10px 14px;
+    min-width: 100%;
   }
 
   .shop-title {
