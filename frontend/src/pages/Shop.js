@@ -16,6 +16,8 @@ function Shop() {
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || '');
   const [selectedColor, setSelectedColor] = useState(searchParams.get('color') || '');
   const [selectedSize, setSelectedSize] = useState(searchParams.get('size') || '');
+  const [isNew, setIsNew] = useState(searchParams.get('is_new') === 'true');
+  const [onSale, setOnSale] = useState(searchParams.get('on_sale') === 'true');
   const [priceRange, setPriceRange] = useState([0, 1000000]);
   const [sortBy, setSortBy] = useState(searchParams.get('sort') || 'newest');
   const [showFilters, setShowFilters] = useState(false);
@@ -54,9 +56,11 @@ function Shop() {
     if (selectedCategory) params.category = selectedCategory;
     if (selectedColor) params.color = selectedColor;
     if (selectedSize) params.size = selectedSize;
+    if (isNew) params.is_new = 'true';
+    if (onSale) params.on_sale = 'true';
     if (sortBy !== 'newest') params.sort = sortBy;
     setSearchParams(params);
-  }, [searchQuery, selectedCategory, selectedColor, selectedSize, sortBy, setSearchParams]);
+  }, [searchQuery, selectedCategory, selectedColor, selectedSize, isNew, onSale, sortBy, setSearchParams]);
 
   // Filter and sort products
   const filteredProducts = products
@@ -82,6 +86,12 @@ function Shop() {
         if (!hasSize) return false;
       }
 
+      // New arrivals filter
+      if (isNew && !product.is_new) return false;
+
+      // On sale filter
+      if (onSale && (!product.discount_percentage || product.discount_percentage <= 0)) return false;
+
       // Price filter
       if (product.price < priceRange[0] || product.price > priceRange[1]) return false;
 
@@ -101,11 +111,13 @@ function Shop() {
     setSelectedCategory('');
     setSelectedColor('');
     setSelectedSize('');
+    setIsNew(false);
+    setOnSale(false);
     setPriceRange([0, 1000000]);
     setSortBy('newest');
   };
 
-  const activeFilterCount = [searchQuery, selectedCategory, selectedColor, selectedSize].filter(Boolean).length;
+  const activeFilterCount = [searchQuery, selectedCategory, selectedColor, selectedSize, isNew, onSale].filter(Boolean).length;
 
   return (
     <div className="shop">
@@ -172,6 +184,29 @@ function Shop() {
                 Clear All
               </button>
             )}
+          </div>
+
+          {/* Special Filters */}
+          <div className="filter-group">
+            <h4 className="filter-title">Special</h4>
+            <div className="filter-options">
+              <label className="filter-option checkbox-option">
+                <input
+                  type="checkbox"
+                  checked={isNew}
+                  onChange={(e) => setIsNew(e.target.checked)}
+                />
+                <span>New Arrivals</span>
+              </label>
+              <label className="filter-option checkbox-option">
+                <input
+                  type="checkbox"
+                  checked={onSale}
+                  onChange={(e) => setOnSale(e.target.checked)}
+                />
+                <span>On Sale</span>
+              </label>
+            </div>
           </div>
 
           {/* Category Filter */}
