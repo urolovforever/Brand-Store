@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { productService, cartService, wishlistService } from '../services';
+import { useLanguage } from '../context/LanguageContext';
 import './ProductDetail.css';
 
 function ProductDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [product, setProduct] = useState(null);
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [selectedImage, setSelectedImage] = useState(0);
@@ -40,7 +42,8 @@ function ProductDetail() {
       // Load related products
       try {
         const related = await productService.getRelatedProducts(slug);
-        setRelatedProducts(related);
+        const relatedArray = Array.isArray(related) ? related : related.results || [];
+        setRelatedProducts(relatedArray);
       } catch (err) {
         console.error('Error loading related products:', err);
       }
@@ -96,7 +99,7 @@ function ProductDetail() {
     return (
       <div className="loading-page">
         <div className="spinner"></div>
-        <p>Loading product...</p>
+        <p>{t('loadingProducts')}</p>
       </div>
     );
   }
@@ -104,8 +107,8 @@ function ProductDetail() {
   if (error || !product) {
     return (
       <div className="error-page">
-        <h2>{error || 'Product not found'}</h2>
-        <Link to="/shop" className="back-link">← Back to Shop</Link>
+        <h2>{error || t('noProducts')}</h2>
+        <Link to="/shop" className="back-link">← {t('shop')}</Link>
       </div>
     );
   }
@@ -119,9 +122,9 @@ function ProductDetail() {
     <div className="product-detail">
       {/* Breadcrumb */}
       <div className="breadcrumb">
-        <Link to="/">Home</Link>
+        <Link to="/">{t('home')}</Link>
         <span className="separator">›</span>
-        <Link to="/shop">Shop</Link>
+        <Link to="/shop">{t('shop')}</Link>
         {product.category && (
           <>
             <span className="separator">›</span>
@@ -180,7 +183,7 @@ function ProductDetail() {
                 <span className="separator">•</span>
                 <div className="product-rating">
                   <span className="stars">★★★★★</span>
-                  <span className="rating-text">({product.reviews_count || 0} reviews)</span>
+                  <span className="rating-text">({product.reviews_count || 0} {t('reviews')})</span>
                 </div>
               </div>
             </div>
@@ -195,12 +198,14 @@ function ProductDetail() {
           </div>
 
           <div className="product-price">
-            <span className="price">{product.price.toLocaleString()} UZS</span>
-            {product.discount_percentage > 0 && (
+            {hasDiscount ? (
               <>
+                <span className="price">{Math.round(finalPrice).toLocaleString()} UZS</span>
                 <span className="original-price">{product.price.toLocaleString()} UZS</span>
                 <span className="discount">-{product.discount_percentage}%</span>
               </>
+            ) : (
+              <span className="price">{product.price.toLocaleString()} UZS</span>
             )}
           </div>
 
@@ -210,7 +215,7 @@ function ProductDetail() {
           {product.colors && product.colors.length > 0 && (
             <div className="selection-group">
               <div className="selection-header">
-                <label className="selection-label">Color</label>
+                <label className="selection-label">{t('selectColor')}</label>
                 <span className="selected-value">{selectedColor}</span>
               </div>
               <div className="color-options">
@@ -237,7 +242,7 @@ function ProductDetail() {
           {product.sizes && product.sizes.length > 0 && (
             <div className="selection-group">
               <div className="selection-header">
-                <label className="selection-label">Size</label>
+                <label className="selection-label">{t('selectSize')}</label>
                 <span className="selected-value">{selectedSize}</span>
               </div>
               <div className="size-options">
@@ -254,14 +259,14 @@ function ProductDetail() {
                 ))}
               </div>
               {selectedSize && selectedSizeStock < 5 && selectedSizeStock > 0 && (
-                <p className="stock-warning">Only {selectedSizeStock} left in stock</p>
+                <p className="stock-warning">{t('onlyLeft')} {selectedSizeStock} {t('inStock')}</p>
               )}
             </div>
           )}
 
           {/* Quantity Selector */}
           <div className="selection-group">
-            <label className="selection-label">Quantity</label>
+            <label className="selection-label">{t('quantity')}</label>
             <div className="quantity-selector">
               <button
                 className="quantity-btn"
@@ -304,26 +309,26 @@ function ProductDetail() {
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <polyline points="20 6 9 17 4 12"/>
                 </svg>
-                Added to Cart
+                {t('addedToCart')}
               </>
             ) : (
-              'Add to Cart'
+              t('addToCart')
             )}
           </button>
 
           {!canAddToCart && (
             <p className="error-message">
-              {!selectedColor && 'Please select a color'}
-              {!selectedSize && !selectedColor && ' and '}
-              {!selectedSize && 'Please select a size'}
-              {selectedColor && selectedSize && quantity > selectedSizeStock && 'Not enough stock'}
+              {!selectedColor && `${t('selectColor')}`}
+              {!selectedSize && !selectedColor && ' & '}
+              {!selectedSize && `${t('selectSize')}`}
+              {selectedColor && selectedSize && quantity > selectedSizeStock && t('outOfStock')}
             </p>
           )}
 
           {/* Product Details */}
           {product.details && product.details.length > 0 && (
             <div className="product-details">
-              <h3 className="details-title">Product Details</h3>
+              <h3 className="details-title">{t('productDetails')}</h3>
               <ul className="details-list">
                 {product.details.map((detail, index) => (
                   <li key={index}>{detail}</li>
@@ -337,7 +342,7 @@ function ProductDetail() {
       {/* Related Products */}
       {relatedProducts && relatedProducts.length > 0 && (
         <section className="related-products">
-          <h2 className="section-title">You May Also Like</h2>
+          <h2 className="section-title">{t('youMayAlsoLike')}</h2>
           <div className="related-grid">
             {relatedProducts.slice(0, 4).map(relatedProduct => (
               <Link key={relatedProduct.id} to={`/product/${relatedProduct.slug}`} className="related-card">
