@@ -1,12 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { productService } from '../services';
 import { useLanguage } from '../context/LanguageContext';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Autoplay, Pagination, Navigation } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/pagination';
+import 'swiper/css/navigation';
 import './Home.css';
 
 function Home() {
   const { t } = useLanguage();
   const [newArrivals, setNewArrivals] = useState([]);
+  const [onSaleProducts, setOnSaleProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -16,17 +22,20 @@ function Home() {
 
   const loadData = async () => {
     try {
-      const [newProducts, categoriesData] = await Promise.all([
+      const [newProducts, onSaleData, categoriesData] = await Promise.all([
         productService.getNewArrivals(),
+        productService.getSaleProducts(),
         productService.getCategories(),
       ]);
 
       // Handle paginated response (DRF returns {results: [...], count: N})
       const productsArray = Array.isArray(newProducts) ? newProducts : newProducts.results || [];
+      const onSaleArray = Array.isArray(onSaleData) ? onSaleData : onSaleData.results || [];
       const categoriesArray = Array.isArray(categoriesData) ? categoriesData : categoriesData.results || [];
 
       setNewArrivals(productsArray.slice(0, 4)); // Show first 4
-      setCategories(categoriesArray.slice(0, 3)); // Show first 3
+      setOnSaleProducts(onSaleArray.slice(0, 4)); // Show first 4
+      setCategories(categoriesArray); // Show all for horizontal scroll
     } catch (error) {
       console.error('Error loading home data:', error);
     } finally {
@@ -36,16 +45,99 @@ function Home() {
 
   return (
     <div className="home">
-      {/* Hero Section */}
-      <section className="hero">
-        <div className="hero-content">
-          <h1 className="hero-title">{t('heroTitle')}</h1>
-          <p className="hero-subtitle">{t('heroSubtitle')}</p>
-          <Link to="/shop" className="cta-button">{t('exploreCollection')}</Link>
-        </div>
+      {/* Hero Carousel */}
+      <section className="hero-carousel">
+        <Swiper
+          modules={[Autoplay, Pagination, Navigation]}
+          spaceBetween={0}
+          slidesPerView={1}
+          autoplay={{
+            delay: 4000,
+            disableOnInteraction: false,
+          }}
+          pagination={{
+            clickable: true,
+            dynamicBullets: false,
+          }}
+          navigation={true}
+          loop={true}
+          className="hero-swiper"
+        >
+          <SwiperSlide>
+            <div className="hero-slide hero-slide-1">
+              <div className="hero-content">
+                <h1 className="hero-title">{t('heroTitle')}</h1>
+                <p className="hero-subtitle">{t('heroSubtitle')}</p>
+                <Link to="/shop" className="cta-button">{t('exploreCollection')}</Link>
+              </div>
+            </div>
+          </SwiperSlide>
+          <SwiperSlide>
+            <div className="hero-slide hero-slide-2">
+              <div className="hero-content">
+                <h1 className="hero-title">{t('newArrivals')}</h1>
+                <p className="hero-subtitle">{t('premiumQualityDesc')}</p>
+                <Link to="/shop?is_new=true" className="cta-button">{t('viewAll')}</Link>
+              </div>
+            </div>
+          </SwiperSlide>
+          <SwiperSlide>
+            <div className="hero-slide hero-slide-3">
+              <div className="hero-content">
+                <h1 className="hero-title">{t('sale')}</h1>
+                <p className="hero-subtitle">{t('easyReturnsDesc')}</p>
+                <Link to="/shop?on_sale=true" className="cta-button">{t('viewAll')}</Link>
+              </div>
+            </div>
+          </SwiperSlide>
+        </Swiper>
       </section>
 
-      {/* Featured Category */}
+      {/* Horizontal Category Carousel */}
+      {categories.length > 0 && (
+        <section className="category-carousel-section">
+          <div className="section-header-full">
+            <h2 className="section-title">{t('category')}</h2>
+          </div>
+          <Swiper
+            modules={[Navigation]}
+            spaceBetween={24}
+            slidesPerView="auto"
+            navigation={true}
+            className="category-swiper"
+            breakpoints={{
+              320: {
+                slidesPerView: 1.5,
+                spaceBetween: 16,
+              },
+              480: {
+                slidesPerView: 2,
+                spaceBetween: 20,
+              },
+              768: {
+                slidesPerView: 3,
+                spaceBetween: 24,
+              },
+              1024: {
+                slidesPerView: 4,
+                spaceBetween: 24,
+              },
+            }}
+          >
+            {categories.map(category => (
+              <SwiperSlide key={category.id}>
+                <CategoryCard
+                  title={category.name}
+                  description={category.description || `Explore our ${category.name} collection`}
+                  link={`/shop?category=${category.slug}`}
+                />
+              </SwiperSlide>
+            ))}
+          </Swiper>
+        </section>
+      )}
+
+      {/* New Arrivals Section */}
       <section className="featured-section">
         <div className="section-header">
           <h2 className="section-title">{t('newArrivals')}</h2>
@@ -68,17 +160,20 @@ function Home() {
         )}
       </section>
 
-      {/* Category Showcase */}
-      <section className="category-showcase">
-        {categories.map(category => (
-          <CategoryCard
-            key={category.id}
-            title={category.name}
-            description={category.description || `Explore our ${category.name} collection`}
-            link={`/shop?category=${category.slug}`}
-          />
-        ))}
-      </section>
+      {/* On Sale Section */}
+      {onSaleProducts.length > 0 && (
+        <section className="featured-section on-sale-section">
+          <div className="section-header">
+            <h2 className="section-title">{t('sale')}</h2>
+            <Link to="/shop?on_sale=true" className="view-all">{t('viewAll')} →</Link>
+          </div>
+          <div className="product-grid">
+            {onSaleProducts.map(product => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Values Section */}
       <section className="values-section">
