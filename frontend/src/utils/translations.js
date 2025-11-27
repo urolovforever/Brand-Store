@@ -21,6 +21,9 @@ const translations = {
     viewAll: 'Hammasini Ko\'rish',
     loadingProducts: 'Mahsulotlar yuklanmoqda...',
     noNewArrivals: 'Hozircha yangi mahsulotlar yo\'q',
+    noSaleProducts: 'Hozircha chegirmali mahsulotlar yo\'q',
+    checkBackLater: 'Keyinroq tekshirib ko\'ring',
+    shopAll: 'Barcha Mahsulotlar',
 
     // Values Section
     premiumQuality: 'Premium Sifat',
@@ -172,6 +175,9 @@ const translations = {
     viewAll: 'Смотреть Все',
     loadingProducts: 'Загрузка товаров...',
     noNewArrivals: 'Пока нет новых товаров',
+    noSaleProducts: 'Пока нет товаров со скидкой',
+    checkBackLater: 'Проверьте позже',
+    shopAll: 'Все Товары',
 
     // Values Section
     premiumQuality: 'Премиум Качество',

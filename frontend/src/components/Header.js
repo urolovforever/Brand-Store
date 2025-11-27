@@ -35,8 +35,8 @@ function Header() {
 
         <nav className="nav">
           <Link to="/shop" className="nav-link">{t('shop')}</Link>
-          <Link to="/shop?is_new=true" className="nav-link">{t('new')}</Link>
-          <Link to="/shop?on_sale=true" className="nav-link">{t('sale')}</Link>
+          <Link to="/new" className="nav-link">{t('new')}</Link>
+          <Link to="/sale" className="nav-link">{t('sale')}</Link>
         </nav>
 
         <div className="header-actions">
