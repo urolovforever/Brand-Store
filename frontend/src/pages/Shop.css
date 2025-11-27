@@ -207,6 +207,13 @@
   cursor: pointer;
 }
 
+.filter-option input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #1F4EAD;
+  cursor: pointer;
+}
+
 .filter-option span {
   font-size: 14px;
   color: #6B6B6B;
