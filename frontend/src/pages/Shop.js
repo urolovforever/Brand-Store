@@ -83,7 +83,6 @@ function Shop() {
       switch (sortBy) {
         case 'price_low': return a.price - b.price;
         case 'price_high': return b.price - a.price;
-        case 'name': return a.name.localeCompare(b.name);
         default: return new Date(b.created_at) - new Date(a.created_at); // newest
       }
     });
@@ -127,7 +126,6 @@ function Shop() {
             <option value="newest">Newest</option>
             <option value="price_low">Price: Low to High</option>
             <option value="price_high">Price: High to Low</option>
-            <option value="name">Name: A to Z</option>
           </select>
         </div>
       </div>

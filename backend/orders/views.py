@@ -134,13 +134,68 @@ class CartViewSet(viewsets.ViewSet):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-    @action(detail=False, methods=['delete'])
+    @action(detail=False, methods=['post'])
     def clear(self, request):
         """Clear all items from cart"""
         cart = Cart.objects.filter(user=request.user).first()
         if cart:
             cart.items.all().delete()
+            cart.promo_code = None
+            cart.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=False, methods=['post'])
+    def apply_promo(self, request):
+        """Apply promo code to cart"""
+        cart, created = Cart.objects.get_or_create(user=request.user)
+        code = request.data.get('code', '').strip().upper()
+
+        if not code:
+            return Response(
+                {'error': 'Promo code is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            promo = PromoCode.objects.get(code=code, is_active=True)
+        except PromoCode.DoesNotExist:
+            return Response(
+                {'error': 'Invalid promo code'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Check if promo is valid
+        if not promo.is_valid:
+            return Response(
+                {'error': 'Promo code has expired or reached maximum uses'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Check minimum order amount
+        subtotal = sum(item.product.price * item.quantity for item in cart.items.all())
+        if subtotal < promo.min_order_amount:
+            return Response(
+                {'error': f'Minimum order amount is {promo.min_order_amount} UZS'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Apply promo code
+        cart.promo_code = promo
+        cart.save()
+
+        serializer = CartSerializer(cart, context={'request': request})
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['post'])
+    def remove_promo(self, request):
+        """Remove promo code from cart"""
+        cart = Cart.objects.filter(user=request.user).first()
+        if cart:
+            cart.promo_code = None
+            cart.save()
+
+        serializer = CartSerializer(cart, context={'request': request})
+        return Response(serializer.data)
 
 
 class OrderViewSet(viewsets.ModelViewSet):
