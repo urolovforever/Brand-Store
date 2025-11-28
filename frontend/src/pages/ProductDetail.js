@@ -86,7 +86,7 @@ function ProductDetail() {
 
   const handleQuantityChange = (delta) => {
     const newQuantity = quantity + delta;
-    if (newQuantity >= 1 && newQuantity <= product.stock) {
+    if (newQuantity >= 1) {
       setQuantity(newQuantity);
     }
   };
@@ -119,13 +119,10 @@ function ProductDetail() {
   // Can add to cart if:
   // - Color is selected (if product has colors)
   // - Size is selected (if product has sizes)
-  // - Product has stock
   const canAddToCart =
     (!hasColors || selectedColor) &&
     (!hasSizes || selectedSize) &&
-    quantity > 0 &&
-    quantity <= product.stock &&
-    product.stock > 0;
+    quantity > 0;
 
   return (
     <div className="product-detail">
@@ -265,9 +262,6 @@ function ProductDetail() {
                 </button>
                 ))}
               </div>
-              {product.stock < 5 && product.stock > 0 && (
-                <p className="stock-warning">{t('onlyLeft')} {product.stock} {t('inStock')}</p>
-              )}
             </div>
           )}
 
@@ -288,17 +282,15 @@ function ProductDetail() {
                 value={quantity}
                 onChange={(e) => {
                   const val = parseInt(e.target.value) || 1;
-                  if (val >= 1 && val <= product.stock) {
+                  if (val >= 1) {
                     setQuantity(val);
                   }
                 }}
                 min="1"
-                max={product.stock}
               />
               <button
                 className="quantity-btn"
                 onClick={() => handleQuantityChange(1)}
-                disabled={quantity >= product.stock}
               >
                 +
               </button>
@@ -328,7 +320,6 @@ function ProductDetail() {
               {hasColors && !selectedColor && `${t('selectColor')}`}
               {hasColors && !selectedColor && hasSizes && !selectedSize && ' & '}
               {hasSizes && !selectedSize && `${t('selectSize')}`}
-              {((hasColors && selectedColor) || !hasColors) && ((hasSizes && selectedSize) || !hasSizes) && quantity > product.stock && t('outOfStock')}
             </p>
           )}
 
