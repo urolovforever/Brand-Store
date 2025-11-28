@@ -125,7 +125,32 @@ export const CartProvider = ({ children }) => {
       return sum + (item.product.price * item.quantity);
     }, 0);
 
-    const discount = appliedPromo ? (subtotal * appliedPromo.discount / 100) : 0;
+    let discount = 0;
+
+    if (appliedPromo) {
+      // Check minimum order amount requirement
+      if (appliedPromo.min_order_amount && subtotal < appliedPromo.min_order_amount) {
+        // Don't apply discount if minimum order amount is not met
+        discount = 0;
+      } else {
+        // Determine promo type and calculate discount
+        if (appliedPromo.discount_percentage > 0) {
+          // Percentage-based discount
+          let percentageDiscount = subtotal * (appliedPromo.discount_percentage / 100);
+
+          // Apply maximum discount cap if set
+          if (appliedPromo.discount_fixed > 0) {
+            discount = Math.min(percentageDiscount, appliedPromo.discount_fixed);
+          } else {
+            discount = percentageDiscount;
+          }
+        } else if (appliedPromo.discount_fixed > 0) {
+          // Fixed amount discount
+          discount = Math.min(appliedPromo.discount_fixed, subtotal);
+        }
+      }
+    }
+
     const shipping = subtotal > 0 ? (subtotal > 200000 ? 0 : 15000) : 0;
     const total = subtotal - discount + shipping;
 
