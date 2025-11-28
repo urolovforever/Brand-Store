@@ -68,7 +68,8 @@ function ProductDetail() {
       setTimeout(() => setAddedToCart(false), 2000);
     } catch (error) {
       console.error('Error adding to cart:', error);
-      alert('Failed to add to cart. Please try again.');
+      const errorMessage = error?.error || error?.message || 'Failed to add to cart. Please try again.';
+      alert(errorMessage);
     }
   };
 

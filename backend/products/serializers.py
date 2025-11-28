@@ -15,7 +15,7 @@ class SizeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Size
-        fields = ('id', 'name', 'order')
+        fields = ('id', 'name', 'order', 'stock')
 
 
 class CategorySerializer(serializers.ModelSerializer):
