@@ -49,6 +49,7 @@ class Size(models.Model):
     """Available product sizes"""
     name = models.CharField(max_length=10, unique=True, help_text="e.g., S, M, L, XL, XXL")
     order = models.IntegerField(default=0, help_text="Display order")
+    stock = models.IntegerField(default=0, validators=[MinValueValidator(0)], help_text="Stock for this size")
 
     class Meta:
         ordering = ['order', 'name']
