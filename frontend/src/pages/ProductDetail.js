@@ -112,21 +112,20 @@ function ProductDetail() {
   const hasDiscount = product.discount_percentage > 0;
   const finalPrice = hasDiscount ? product.price * (1 - product.discount_percentage / 100) : product.price;
 
-  // Check stock based on whether product has sizes
+  // Check if product has colors/sizes
   const hasColors = product.colors && product.colors.length > 0;
   const hasSizes = product.sizes && product.sizes.length > 0;
-  const selectedSizeStock = hasSizes ? (product.sizes.find(s => s.name === selectedSize)?.stock || 0) : product.stock;
 
   // Can add to cart if:
   // - Color is selected (if product has colors)
   // - Size is selected (if product has sizes)
-  // - Quantity is valid
+  // - Product has stock
   const canAddToCart =
     (!hasColors || selectedColor) &&
     (!hasSizes || selectedSize) &&
     quantity > 0 &&
-    quantity <= selectedSizeStock &&
-    selectedSizeStock > 0;
+    quantity <= product.stock &&
+    product.stock > 0;
 
   return (
     <div className="product-detail">
@@ -259,17 +258,15 @@ function ProductDetail() {
                 {product.sizes.map(size => (
                 <button
                   key={size.id}
-                  className={`size-button ${selectedSize === size.name ? 'active' : ''} ${size.stock === 0 ? 'out-of-stock' : ''}`}
-                  onClick={() => size.stock > 0 && setSelectedSize(size.name)}
-                  disabled={size.stock === 0}
+                  className={`size-button ${selectedSize === size.name ? 'active' : ''}`}
+                  onClick={() => setSelectedSize(size.name)}
                 >
                   {size.name}
-                  {size.stock === 0 && <span className="stock-line"></span>}
                 </button>
                 ))}
               </div>
-              {selectedSize && selectedSizeStock < 5 && selectedSizeStock > 0 && (
-                <p className="stock-warning">{t('onlyLeft')} {selectedSizeStock} {t('inStock')}</p>
+              {product.stock < 5 && product.stock > 0 && (
+                <p className="stock-warning">{t('onlyLeft')} {product.stock} {t('inStock')}</p>
               )}
             </div>
           )}
@@ -301,7 +298,7 @@ function ProductDetail() {
               <button
                 className="quantity-btn"
                 onClick={() => handleQuantityChange(1)}
-                disabled={quantity >= selectedSizeStock}
+                disabled={quantity >= product.stock}
               >
                 +
               </button>
@@ -331,7 +328,7 @@ function ProductDetail() {
               {hasColors && !selectedColor && `${t('selectColor')}`}
               {hasColors && !selectedColor && hasSizes && !selectedSize && ' & '}
               {hasSizes && !selectedSize && `${t('selectSize')}`}
-              {((hasColors && selectedColor) || !hasColors) && ((hasSizes && selectedSize) || !hasSizes) && quantity > selectedSizeStock && t('outOfStock')}
+              {((hasColors && selectedColor) || !hasColors) && ((hasSizes && selectedSize) || !hasSizes) && quantity > product.stock && t('outOfStock')}
             </p>
           )}
 
