@@ -22,14 +22,21 @@ function Wishlist() {
       const colorId = product.colors && product.colors.length > 0 ? product.colors[0].id : null;
       const sizeId = product.sizes && product.sizes.length > 0 ? product.sizes[0].id : null;
 
+      console.log('Adding to cart:', { productId: product.id, colorId, sizeId });
+
       // Add to cart
       const result = await addToCart(product.id, 1, colorId, sizeId);
 
+      console.log('Add to cart result:', result);
+
       if (result.success) {
+        console.log('Successfully added to cart, removing from wishlist. Product ID:', product.id, 'Type:', typeof product.id);
         // Remove from wishlist after successful cart addition
         removeFromWishlist(product.id);
+        console.log('Called removeFromWishlist');
       } else {
         // Show error message if cart addition failed
+        console.log('Failed to add to cart:', result.message);
         alert(result.message || 'Failed to add to cart');
       }
     } catch (error) {

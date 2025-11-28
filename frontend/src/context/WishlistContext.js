@@ -27,8 +27,10 @@ export const WishlistProvider = ({ children }) => {
 
   // Load full product data for wishlist items
   useEffect(() => {
+    console.log('WishlistContext: useEffect triggered, wishlistIds:', wishlistIds);
     const loadWishlistItems = async () => {
       if (wishlistIds.length === 0) {
+        console.log('WishlistContext: No items in wishlist, clearing');
         setWishlistItems([]);
         return;
       }
@@ -38,6 +40,7 @@ export const WishlistProvider = ({ children }) => {
         const products = await productService.getProducts();
         const productsArray = Array.isArray(products) ? products : products.results || [];
         const items = productsArray.filter(product => wishlistIds.includes(product.id));
+        console.log('WishlistContext: Loaded wishlist items:', items.length, 'items');
         setWishlistItems(items);
       } catch (error) {
         console.error('Error loading wishlist items:', error);
@@ -59,7 +62,13 @@ export const WishlistProvider = ({ children }) => {
   };
 
   const removeFromWishlist = (productId) => {
-    setWishlistIds(prev => prev.filter(id => id !== productId));
+    console.log('WishlistContext: removeFromWishlist called with productId:', productId);
+    setWishlistIds(prev => {
+      console.log('WishlistContext: Previous wishlistIds:', prev);
+      const newIds = prev.filter(id => id !== productId);
+      console.log('WishlistContext: New wishlistIds:', newIds);
+      return newIds;
+    });
   };
 
   const toggleWishlist = (productId) => {

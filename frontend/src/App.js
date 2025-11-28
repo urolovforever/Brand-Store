@@ -18,7 +18,6 @@ import NewArrivals from './pages/NewArrivals';
 import OnSale from './pages/OnSale';
 import ProductDetail from './pages/ProductDetail';
 import Cart from './pages/Cart';
-import Wishlist from './pages/Wishlist';
 import Checkout from './pages/Checkout';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -43,7 +42,6 @@ function App() {
                     <Route path="/sale" element={<OnSale />} />
                     <Route path="/product/:slug" element={<ProductDetail />} />
                     <Route path="/cart" element={<Cart />} />
-                    <Route path="/wishlist" element={<Wishlist />} />
                     <Route path="/checkout" element={<Checkout />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
@@ -67,17 +65,29 @@ function WishlistDrawerContainer() {
   const { addToCart } = useCart();
 
   const handleAddToCart = async (item) => {
-    const result = await addToCart(item.id, 1);
-    if (result.success) {
-      console.log('Added to cart:', item.name);
-    } else {
-      alert(result.message);
+    try {
+      // If product has colors/sizes, use the first available option
+      const colorId = item.colors && item.colors.length > 0 ? item.colors[0].id : null;
+      const sizeId = item.sizes && item.sizes.length > 0 ? item.sizes[0].id : null;
+
+      const result = await addToCart(item.id, 1, colorId, sizeId);
+
+      if (result.success) {
+        console.log('Added to cart from wishlist drawer:', item.name);
+        // Remove from wishlist after successful cart addition
+        removeFromWishlist(item.id);
+      } else {
+        alert(result.message || 'Failed to add to cart');
+      }
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      alert('Failed to add to cart. Please try again.');
     }
   };
 
   const handleMoveAllToCart = async () => {
     for (const item of wishlistItems) {
-      await addToCart(item.id, 1);
+      await handleAddToCart(item);
     }
     closeDrawer();
   };
