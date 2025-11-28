@@ -30,10 +30,10 @@ function Wishlist() {
       console.log('Add to cart result:', result);
 
       if (result.success) {
-        console.log('Successfully added to cart, removing from wishlist:', product.id);
+        console.log('Successfully added to cart, removing from wishlist. Product ID:', product.id, 'Type:', typeof product.id);
         // Remove from wishlist after successful cart addition
         removeFromWishlist(product.id);
-        console.log('Removed from wishlist');
+        console.log('Called removeFromWishlist');
       } else {
         // Show error message if cart addition failed
         console.log('Failed to add to cart:', result.message);
