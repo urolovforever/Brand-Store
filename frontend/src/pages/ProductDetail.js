@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { productService, cartService, wishlistService } from '../services';
+import { productService, wishlistService } from '../services';
 import { useLanguage } from '../context/LanguageContext';
+import { useCart } from '../context/CartContext';
 import './ProductDetail.css';
 
 function ProductDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const { addToCart } = useCart();
   const [product, setProduct] = useState(null);
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [selectedImage, setSelectedImage] = useState(0);
@@ -62,10 +64,14 @@ function ProductDetail() {
       const colorId = product.colors?.find(c => c.name === selectedColor)?.id;
       const sizeId = product.sizes?.find(s => s.name === selectedSize)?.id;
 
-      await cartService.addToCart(product.id, quantity, colorId, sizeId);
+      const result = await addToCart(product.id, quantity, colorId, sizeId);
 
-      setAddedToCart(true);
-      setTimeout(() => setAddedToCart(false), 2000);
+      if (result.success) {
+        setAddedToCart(true);
+        setTimeout(() => setAddedToCart(false), 2000);
+      } else {
+        alert(result.message || 'Failed to add to cart. Please try again.');
+      }
     } catch (error) {
       console.error('Error adding to cart:', error);
       const errorMessage = error?.error || error?.message || 'Failed to add to cart. Please try again.';
