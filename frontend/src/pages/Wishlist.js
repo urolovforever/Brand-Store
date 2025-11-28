@@ -1,62 +1,43 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useWishlist } from '../context/WishlistContext';
+import { useCart } from '../context/CartContext';
 import './Wishlist.css';
 
 function Wishlist() {
   const navigate = useNavigate();
-  const [wishlistItems, setWishlistItems] = useState([
-    {
-      id: 1,
-      product: {
-        id: 1,
-        name: 'TIU Classic Hoodie',
-        price: 89000,
-        category: 'Apparel',
-        image: null,
-        slug: 'tiu-classic-hoodie',
-        in_stock: true,
-        is_new: true,
-      },
-    },
-    {
-      id: 2,
-      product: {
-        id: 2,
-        name: 'University Tee',
-        price: 45000,
-        category: 'Apparel',
-        image: null,
-        slug: 'university-tee',
-        in_stock: true,
-        on_sale: true,
-      },
-    },
-    {
-      id: 3,
-      product: {
-        id: 3,
-        name: 'Campus Cap',
-        price: 35000,
-        category: 'Accessories',
-        image: null,
-        slug: 'campus-cap',
-        in_stock: false,
-      },
-    },
-  ]);
+  const { wishlistItems, removeFromWishlist, loading } = useWishlist();
+  const { addToCart } = useCart();
+  const [addingToCart, setAddingToCart] = useState(null);
 
-  const handleRemoveItem = (itemId) => {
-    setWishlistItems(wishlistItems.filter(item => item.id !== itemId));
+  const handleRemoveItem = (productId) => {
+    removeFromWishlist(productId);
   };
 
-  const handleMoveToCart = (item) => {
-    // API call to add to cart
-    console.log('Move to cart:', item);
-    // Show success message
-    alert(`${item.product.name} added to cart!`);
-    // Optionally remove from wishlist
-    // handleRemoveItem(item.id);
+  const handleMoveToCart = async (product) => {
+    setAddingToCart(product.id);
+    try {
+      // Add to cart (products without color/size variations)
+      const result = await addToCart(product.id, 1, null, null);
+
+      if (result.success) {
+        // Remove from wishlist after successful cart addition
+        removeFromWishlist(product.id);
+      }
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+    } finally {
+      setAddingToCart(null);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="wishlist-empty">
+        <p>Loading wishlist...</p>
+      </div>
+    );
+  }
 
   if (wishlistItems.length === 0) {
     return (
@@ -83,13 +64,14 @@ function Wishlist() {
       </div>
 
       <div className="wishlist-grid">
-        {wishlistItems.map((item, index) => (
+        {wishlistItems.map((product, index) => (
           <WishlistCard
-            key={item.id}
-            item={item}
+            key={product.id}
+            product={product}
             index={index}
             onRemove={handleRemoveItem}
             onMoveToCart={handleMoveToCart}
+            isAddingToCart={addingToCart === product.id}
           />
         ))}
       </div>
@@ -105,48 +87,53 @@ function Wishlist() {
 }
 
 // Wishlist Card Component
-function WishlistCard({ item, index, onRemove, onMoveToCart }) {
+function WishlistCard({ product, index, onRemove, onMoveToCart, isAddingToCart }) {
+  const primaryImage = product.primary_image || (product.images && product.images[0]?.image);
+
   return (
     <div className="wishlist-card" style={{ animationDelay: `${index * 0.05}s` }}>
-      <button className="remove-btn" onClick={() => onRemove(item.id)}>
+      <button className="remove-btn" onClick={() => onRemove(product.id)}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <line x1="18" y1="6" x2="6" y2="18"/>
           <line x1="6" y1="6" x2="18" y2="18"/>
         </svg>
       </button>
 
-      <Link to={`/product/${item.product.slug}`} className="card-image">
-        <div className="image-placeholder">
-          {item.product.name}
-        </div>
-        {item.product.is_new && <span className="badge new-badge">New</span>}
-        {item.product.on_sale && <span className="badge sale-badge">Sale</span>}
-        {!item.product.in_stock && (
-          <div className="out-of-stock-overlay">
-            <span className="stock-label">Out of Stock</span>
+      <Link to={`/product/${product.slug}`} className="card-image">
+        {primaryImage ? (
+          <img src={primaryImage} alt={product.name} />
+        ) : (
+          <div className="image-placeholder">
+            {product.name}
           </div>
         )}
+        {product.is_new && <span className="badge new-badge">New</span>}
+        {product.is_on_sale && <span className="badge sale-badge">Sale</span>}
       </Link>
 
       <div className="card-content">
-        <Link to={`/product/${item.product.slug}`} className="card-name">
-          {item.product.name}
+        <Link to={`/product/${product.slug}`} className="card-name">
+          {product.name}
         </Link>
-        <p className="card-category">{item.product.category}</p>
-        <p className="card-price">{item.product.price.toLocaleString()} UZS</p>
+        <p className="card-category">{product.category?.name || product.category_name}</p>
+        <div className="price-container">
+          {product.is_on_sale && product.discounted_price ? (
+            <>
+              <p className="card-price discounted">{Number(product.price).toLocaleString()} UZS</p>
+              <p className="card-price">{Number(product.discounted_price).toLocaleString()} UZS</p>
+            </>
+          ) : (
+            <p className="card-price">{Number(product.price).toLocaleString()} UZS</p>
+          )}
+        </div>
 
-        {item.product.in_stock ? (
-          <button
-            className="add-to-cart-btn"
-            onClick={() => onMoveToCart(item)}
-          >
-            Add to Cart
-          </button>
-        ) : (
-          <button className="notify-btn" disabled>
-            Notify Me
-          </button>
-        )}
+        <button
+          className="add-to-cart-btn"
+          onClick={() => onMoveToCart(product)}
+          disabled={isAddingToCart}
+        >
+          {isAddingToCart ? 'Adding...' : 'Add to Cart'}
+        </button>
       </div>
     </div>
   );
