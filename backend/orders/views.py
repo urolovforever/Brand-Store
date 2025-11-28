@@ -45,25 +45,6 @@ class CartViewSet(viewsets.ViewSet):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        # Check stock - use size stock if size is specified, otherwise product stock
-        available_stock = product.stock
-        if size_id:
-            try:
-                from products.models import Size
-                size = Size.objects.get(id=size_id)
-                available_stock = size.stock
-            except Size.DoesNotExist:
-                return Response(
-                    {'error': 'Size not found'},
-                    status=status.HTTP_404_NOT_FOUND
-                )
-
-        if available_stock < quantity:
-            return Response(
-                {'error': 'Insufficient stock'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
         # Check if item already exists in cart
         # Handle None values for color_id and size_id properly
         if color_id is None and size_id is None:
@@ -98,11 +79,6 @@ class CartViewSet(viewsets.ViewSet):
         if cart_item:
             # Update quantity
             cart_item.quantity += quantity
-            if cart_item.quantity > available_stock:
-                return Response(
-                    {'error': 'Insufficient stock'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
             cart_item.save()
         else:
             # Create new cart item
@@ -137,13 +113,6 @@ class CartViewSet(viewsets.ViewSet):
         if quantity <= 0:
             cart_item.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
-
-        # Check stock
-        if cart_item.product.stock < quantity:
-            return Response(
-                {'error': 'Insufficient stock'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
 
         cart_item.quantity = quantity
         cart_item.save()
