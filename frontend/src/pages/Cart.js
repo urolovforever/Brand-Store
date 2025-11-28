@@ -122,20 +122,27 @@ function Cart() {
           <div className="promo-section">
             <label className="promo-label">Promo Code</label>
             {appliedPromo ? (
-              <div className="promo-applied">
-                <div className="promo-info">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <polyline points="20 6 9 17 4 12"/>
-                  </svg>
-                  <span>{appliedPromo.code} applied</span>
+              <>
+                <div className="promo-applied">
+                  <div className="promo-info">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    <span>{appliedPromo.code} applied</span>
+                  </div>
+                  <button className="remove-promo" onClick={handleRemovePromo}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <line x1="18" y1="6" x2="6" y2="18"/>
+                      <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                  </button>
                 </div>
-                <button className="remove-promo" onClick={handleRemovePromo}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <line x1="18" y1="6" x2="6" y2="18"/>
-                    <line x1="6" y1="6" x2="18" y2="18"/>
-                  </svg>
-                </button>
-              </div>
+                {appliedPromo.min_order_amount > 0 && subtotal < appliedPromo.min_order_amount && (
+                  <p className="promo-error">
+                    Minimum order amount: {appliedPromo.min_order_amount.toLocaleString()} UZS
+                  </p>
+                )}
+              </>
             ) : (
               <>
                 <div className="promo-input-group">
@@ -162,9 +169,13 @@ function Cart() {
               <span className="price-value">{subtotal.toLocaleString()} UZS</span>
             </div>
 
-            {discount > 0 && (
+            {discount > 0 && appliedPromo && (
               <div className="price-row discount-row">
-                <span className="price-label">Discount ({appliedPromo.discount}%)</span>
+                <span className="price-label">
+                  Discount
+                  {appliedPromo.discount_percentage > 0 && ` (${appliedPromo.discount_percentage}%)`}
+                  {appliedPromo.discount_fixed > 0 && appliedPromo.discount_percentage > 0 && discount === appliedPromo.discount_fixed && ' - capped'}
+                </span>
                 <span className="price-value discount">-{discount.toLocaleString()} UZS</span>
               </div>
             )}

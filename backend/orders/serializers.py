@@ -67,8 +67,10 @@ class CartSerializer(serializers.ModelSerializer):
         if obj.promo_code:
             return {
                 'code': obj.promo_code.code,
-                'discount': obj.promo_code.discount_percentage or 0,
                 'description': obj.promo_code.description,
+                'discount_percentage': obj.promo_code.discount_percentage,
+                'discount_fixed': float(obj.promo_code.discount_fixed),
+                'min_order_amount': float(obj.promo_code.min_order_amount),
             }
         return None
 
