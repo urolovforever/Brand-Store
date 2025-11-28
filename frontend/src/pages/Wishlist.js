@@ -17,15 +17,24 @@ function Wishlist() {
   const handleMoveToCart = async (product) => {
     setAddingToCart(product.id);
     try {
-      // Add to cart (products without color/size variations)
-      const result = await addToCart(product.id, 1, null, null);
+      // Determine color and size IDs
+      // If product has colors/sizes, use the first available option
+      const colorId = product.colors && product.colors.length > 0 ? product.colors[0].id : null;
+      const sizeId = product.sizes && product.sizes.length > 0 ? product.sizes[0].id : null;
+
+      // Add to cart
+      const result = await addToCart(product.id, 1, colorId, sizeId);
 
       if (result.success) {
         // Remove from wishlist after successful cart addition
         removeFromWishlist(product.id);
+      } else {
+        // Show error message if cart addition failed
+        alert(result.message || 'Failed to add to cart');
       }
     } catch (error) {
       console.error('Error adding to cart:', error);
+      alert('Failed to add to cart. Please try again.');
     } finally {
       setAddingToCart(null);
     }

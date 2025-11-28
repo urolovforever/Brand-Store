@@ -227,11 +227,11 @@ function CartItem({ item, onQuantityChange, onRemove }) {
         <Link to={`/product/${item.product.slug}`} className="item-name">
           {item.product.name}
         </Link>
-        {(item.color || item.size) && (
+        {(item.color_name || item.size_name) && (
           <div className="item-options">
-            {item.color && <span className="item-option">Color: {item.color.name}</span>}
-            {item.color && item.size && <span className="option-separator">•</span>}
-            {item.size && <span className="item-option">Size: {item.size.name}</span>}
+            {item.color_name && <span className="item-option">Color: {item.color_name}</span>}
+            {item.color_name && item.size_name && <span className="option-separator">•</span>}
+            {item.size_name && <span className="item-option">Size: {item.size_name}</span>}
           </div>
         )}
         <p className="item-price">{item.product.price.toLocaleString()} UZS</p>
