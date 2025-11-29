@@ -14,44 +14,14 @@ function OrderHistory() {
 
   const loadOrders = async () => {
     try {
-      // Sample data - will be replaced with API call
-      setTimeout(() => {
-        setOrders([
-          {
-            id: 'ORD-2024-001',
-            date: '2024-01-15',
-            status: 'DELIVERED',
-            total: 223000,
-            items: [
-              { name: 'TIU Classic Hoodie', quantity: 2, price: 89000 },
-              { name: 'University Tee', quantity: 1, price: 45000 },
-            ],
-          },
-          {
-            id: 'ORD-2024-002',
-            date: '2024-01-20',
-            status: 'SHIPPED',
-            total: 95000,
-            items: [
-              { name: 'Campus Cap', quantity: 1, price: 35000 },
-              { name: 'Logo Tote Bag', quantity: 1, price: 55000 },
-            ],
-            tracking: 'TRK123456789',
-          },
-          {
-            id: 'ORD-2024-003',
-            date: '2024-01-22',
-            status: 'PROCESSING',
-            total: 65000,
-            items: [
-              { name: 'Cotton Polo', quantity: 1, price: 65000 },
-            ],
-          },
-        ]);
-        setLoading(false);
-      }, 500);
+      setLoading(true);
+      const data = await orderService.getOrders();
+      // Backend returns orders with items
+      setOrders(data);
     } catch (error) {
       console.error('Error loading orders:', error);
+      setOrders([]);
+    } finally {
       setLoading(false);
     }
   };
@@ -175,8 +145,8 @@ function OrderCard({ order, index, getStatusColor, getStatusLabel }) {
       <div className="order-header" onClick={() => setExpanded(!expanded)}>
         <div className="order-info">
           <div className="order-id-date">
-            <h3 className="order-id">{order.id}</h3>
-            <span className="order-date">{formatDate(order.date)}</span>
+            <h3 className="order-id">#{order.order_number}</h3>
+            <span className="order-date">{formatDate(order.created_at)}</span>
           </div>
           <div className="order-meta">
             <span
@@ -185,9 +155,9 @@ function OrderCard({ order, index, getStatusColor, getStatusLabel }) {
             >
               {getStatusLabel(order.status)}
             </span>
-            {order.tracking && (
+            {order.payment_transaction_id && (
               <span className="order-tracking">
-                Tracking: {order.tracking}
+                Transaction: {order.payment_transaction_id}
               </span>
             )}
           </div>
@@ -195,7 +165,7 @@ function OrderCard({ order, index, getStatusColor, getStatusLabel }) {
         <div className="order-summary">
           <div className="order-total">
             <span className="total-label">Total</span>
-            <span className="total-amount">{order.total.toLocaleString()} UZS</span>
+            <span className="total-amount">{Number(order.total).toLocaleString()} UZS</span>
           </div>
           <button className="expand-button">
             <svg
@@ -220,10 +190,12 @@ function OrderCard({ order, index, getStatusColor, getStatusLabel }) {
             {order.items.map((item, i) => (
               <div key={i} className="order-item">
                 <div className="item-info">
-                  <span className="item-name">{item.name}</span>
+                  <span className="item-name">{item.product_name}</span>
+                  {item.color && <span className="item-variation">Color: {item.color}</span>}
+                  {item.size && <span className="item-variation">Size: {item.size}</span>}
                   <span className="item-qty">× {item.quantity}</span>
                 </div>
-                <span className="item-price">{(item.price * item.quantity).toLocaleString()} UZS</span>
+                <span className="item-price">{Number(item.subtotal).toLocaleString()} UZS</span>
               </div>
             ))}
           </div>

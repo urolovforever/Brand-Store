@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { productService } from '../services';
+import { wishlistService } from '../services';
+import { authService } from '../services';
 
 const WishlistContext = createContext();
 
@@ -12,81 +13,95 @@ export const useWishlist = () => {
 };
 
 export const WishlistProvider = ({ children }) => {
-  const [wishlistIds, setWishlistIds] = useState(() => {
-    const saved = localStorage.getItem('wishlist');
-    return saved ? JSON.parse(saved) : [];
-  });
   const [wishlistItems, setWishlistItems] = useState([]);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Save to localStorage whenever wishlistIds changes
+  // Load wishlist from backend when user is authenticated
   useEffect(() => {
-    localStorage.setItem('wishlist', JSON.stringify(wishlistIds));
-  }, [wishlistIds]);
+    if (authService.isAuthenticated()) {
+      loadWishlist();
+    }
+  }, []);
 
-  // Load full product data for wishlist items
-  useEffect(() => {
-    console.log('WishlistContext: useEffect triggered, wishlistIds:', wishlistIds);
-    const loadWishlistItems = async () => {
-      if (wishlistIds.length === 0) {
-        console.log('WishlistContext: No items in wishlist, clearing');
-        setWishlistItems([]);
+  const loadWishlist = async () => {
+    setLoading(true);
+    try {
+      const data = await wishlistService.getWishlist();
+      // Backend returns array of wishlist items with product data
+      setWishlistItems(data.map(item => item.product));
+    } catch (error) {
+      console.error('Error loading wishlist:', error);
+      setWishlistItems([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const addToWishlist = async (productId) => {
+    if (!authService.isAuthenticated()) {
+      return { success: false, message: 'Please login to add items to wishlist' };
+    }
+
+    try {
+      await wishlistService.addToWishlist(productId);
+      await loadWishlist();
+      return { success: true };
+    } catch (error) {
+      console.error('Error adding to wishlist:', error);
+      return { success: false, message: error.error || 'Failed to add to wishlist' };
+    }
+  };
+
+  const removeFromWishlist = async (productId) => {
+    try {
+      // Find the wishlist item ID for this product
+      const wishlistItem = wishlistItems.find(item => item.id === productId);
+      if (!wishlistItem) {
+        console.error('Product not found in wishlist:', productId);
         return;
       }
 
-      setLoading(true);
-      try {
-        const products = await productService.getProducts();
-        const productsArray = Array.isArray(products) ? products : products.results || [];
-        const items = productsArray.filter(product => wishlistIds.includes(product.id));
-        console.log('WishlistContext: Loaded wishlist items:', items.length, 'items');
-        setWishlistItems(items);
-      } catch (error) {
-        console.error('Error loading wishlist items:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+      // In the backend, we need to find the wishlist item ID, not product ID
+      // Since wishlistItems contains products, we need to get the wishlist data first
+      const wishlistData = await wishlistService.getWishlist();
+      const item = wishlistData.find(w => w.product.id === productId);
 
-    loadWishlistItems();
-  }, [wishlistIds]);
-
-  const addToWishlist = (productId) => {
-    setWishlistIds(prev => {
-      if (!prev.includes(productId)) {
-        return [...prev, productId];
+      if (item) {
+        await wishlistService.removeFromWishlist(item.id);
+        await loadWishlist();
       }
-      return prev;
-    });
+    } catch (error) {
+      console.error('Error removing from wishlist:', error);
+    }
   };
 
-  const removeFromWishlist = (productId) => {
-    console.log('WishlistContext: removeFromWishlist called with productId:', productId);
-    setWishlistIds(prev => {
-      console.log('WishlistContext: Previous wishlistIds:', prev);
-      const newIds = prev.filter(id => id !== productId);
-      console.log('WishlistContext: New wishlistIds:', newIds);
-      return newIds;
-    });
-  };
+  const toggleWishlist = async (productId) => {
+    if (!authService.isAuthenticated()) {
+      return { success: false, message: 'Please login to use wishlist' };
+    }
 
-  const toggleWishlist = (productId) => {
-    setWishlistIds(prev => {
-      if (prev.includes(productId)) {
-        return prev.filter(id => id !== productId);
-      } else {
-        return [...prev, productId];
-      }
-    });
+    try {
+      const result = await wishlistService.toggleWishlist(productId);
+      await loadWishlist();
+      return { success: true, in_wishlist: result.in_wishlist };
+    } catch (error) {
+      console.error('Error toggling wishlist:', error);
+      return { success: false, message: error.error || 'Failed to update wishlist' };
+    }
   };
 
   const isInWishlist = (productId) => {
-    return wishlistIds.includes(productId);
+    return wishlistItems.some(item => item.id === productId);
   };
 
-  const clearWishlist = () => {
-    setWishlistIds([]);
+  const clearWishlist = async () => {
+    try {
+      await wishlistService.clearWishlist();
+      setWishlistItems([]);
+    } catch (error) {
+      console.error('Error clearing wishlist:', error);
+    }
   };
 
   const openDrawer = () => {
@@ -102,11 +117,11 @@ export const WishlistProvider = ({ children }) => {
   };
 
   const value = {
-    wishlistIds,
     wishlistItems,
-    wishlistCount: wishlistIds.length,
+    wishlistCount: wishlistItems.length,
     loading,
     isDrawerOpen,
+    loadWishlist,
     addToWishlist,
     removeFromWishlist,
     toggleWishlist,
