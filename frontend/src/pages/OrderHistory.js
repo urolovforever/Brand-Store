@@ -16,8 +16,9 @@ function OrderHistory() {
     try {
       setLoading(true);
       const data = await orderService.getOrders();
-      // Backend returns orders with items
-      setOrders(data);
+      // Backend might return an array or an object with results
+      const ordersArray = Array.isArray(data) ? data : (data?.results || []);
+      setOrders(ordersArray);
     } catch (error) {
       console.error('Error loading orders:', error);
       setOrders([]);
