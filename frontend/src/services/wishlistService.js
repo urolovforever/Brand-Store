@@ -14,7 +14,7 @@ const wishlistService = {
   // Add item to wishlist
   addToWishlist: async (productId) => {
     try {
-      const response = await api.post('/wishlist/add/', {
+      const response = await api.post('/wishlist/', {
         product_id: productId,
       });
       return response.data;
@@ -23,21 +23,23 @@ const wishlistService = {
     }
   },
 
-  // Remove item from wishlist
-  removeFromWishlist: async (productId) => {
+  // Remove item from wishlist by product ID
+  removeFromWishlist: async (wishlistItemId) => {
     try {
-      const response = await api.delete(`/wishlist/remove/${productId}/`);
+      const response = await api.delete(`/wishlist/${wishlistItemId}/`);
       return response.data;
     } catch (error) {
       throw error.response?.data || error.message;
     }
   },
 
-  // Check if product is in wishlist
-  isInWishlist: async (productId) => {
+  // Toggle product in wishlist
+  toggleWishlist: async (productId) => {
     try {
-      const response = await api.get(`/wishlist/check/${productId}/`);
-      return response.data.is_in_wishlist;
+      const response = await api.post('/wishlist/toggle/', {
+        product_id: productId,
+      });
+      return response.data;
     } catch (error) {
       throw error.response?.data || error.message;
     }
@@ -46,7 +48,7 @@ const wishlistService = {
   // Clear entire wishlist
   clearWishlist: async () => {
     try {
-      const response = await api.post('/wishlist/clear/');
+      const response = await api.delete('/wishlist/clear/');
       return response.data;
     } catch (error) {
       throw error.response?.data || error.message;
