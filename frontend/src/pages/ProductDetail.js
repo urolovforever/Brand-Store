@@ -11,7 +11,7 @@ function ProductDetail() {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const { addToCart } = useCart();
-  const { addToWishlist, isInWishlist } = useWishlist();
+  const { addToWishlist, isInWishlist, toggleWishlist } = useWishlist();
   const [product, setProduct] = useState(null);
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [selectedImage, setSelectedImage] = useState(0);
@@ -20,7 +20,6 @@ function ProductDetail() {
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
   const [addedToCart, setAddedToCart] = useState(false);
-  const [addedToWishlist, setAddedToWishlist] = useState(false);
   const [error, setError] = useState(null);
 
   // Load product data from backend
@@ -83,16 +82,13 @@ function ProductDetail() {
 
   const handleAddToWishlist = async () => {
     try {
-      const result = await addToWishlist(product.id);
-      if (result.success) {
-        setAddedToWishlist(true);
-        setTimeout(() => setAddedToWishlist(false), 2000);
-      } else {
-        alert(result.message || 'Please login to add items to wishlist');
+      const result = await toggleWishlist(product.id);
+      if (!result.success) {
+        alert(result.message || 'Please login to use wishlist');
       }
     } catch (error) {
-      console.error('Error adding to wishlist:', error);
-      alert('Failed to add to wishlist. Please try again.');
+      console.error('Error toggling wishlist:', error);
+      alert('Failed to update wishlist. Please try again.');
     }
   };
 
@@ -206,10 +202,11 @@ function ProductDetail() {
               </div>
             </div>
             <button
-              className={`wishlist-btn ${addedToWishlist ? 'added' : ''}`}
+              className={`wishlist-btn ${product && isInWishlist(product.id) ? 'added' : ''}`}
               onClick={handleAddToWishlist}
+              title={product && isInWishlist(product.id) ? "Remove from wishlist" : "Add to wishlist"}
             >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill={addedToWishlist ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.5">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill={product && isInWishlist(product.id) ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.5">
                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
               </svg>
             </button>
