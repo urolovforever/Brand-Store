@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { productService, wishlistService } from '../services';
+import { productService } from '../services';
 import { useLanguage } from '../context/LanguageContext';
 import { useCart } from '../context/CartContext';
+import { useWishlist } from '../context/WishlistContext';
 import './ProductDetail.css';
 
 function ProductDetail() {
@@ -10,6 +11,7 @@ function ProductDetail() {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const { addToCart } = useCart();
+  const { addToWishlist, isInWishlist } = useWishlist();
   const [product, setProduct] = useState(null);
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [selectedImage, setSelectedImage] = useState(0);
@@ -81,9 +83,13 @@ function ProductDetail() {
 
   const handleAddToWishlist = async () => {
     try {
-      await wishlistService.addToWishlist(product.id);
-      setAddedToWishlist(true);
-      setTimeout(() => setAddedToWishlist(false), 2000);
+      const result = await addToWishlist(product.id);
+      if (result.success) {
+        setAddedToWishlist(true);
+        setTimeout(() => setAddedToWishlist(false), 2000);
+      } else {
+        alert(result.message || 'Please login to add items to wishlist');
+      }
     } catch (error) {
       console.error('Error adding to wishlist:', error);
       alert('Failed to add to wishlist. Please try again.');
